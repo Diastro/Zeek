@@ -1,12 +1,11 @@
 import socket
 import sys
 import thread
+import ConfigParser
+import logging
+import datetime
 
-list1 = []
-host = '127.0.0.1'
-port = 5050
-backlog = 5
-size = 1024
+buffSize = 4096
 
 
 class Server:
@@ -22,9 +21,9 @@ class SSClient:
 
     def Listen(self):
         print("SSClient is listening")
-
+        logging.info('In listen')
         while 1:
-            data = self.socket.recv(1024)
+            data = self.socket.recv(buffSize)
 
             #Disconnection
             if not data:
@@ -50,15 +49,23 @@ def ConnectionHandler(socket, address):
 
 
 def main():
-    #loading modules
-    sys.path.append("modules/")
+    #setup
+    logName = str(datetime.datetime.now())
+    logging.basicConfig(filename=logName, format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG)
 
-    #socket setup
+    #config
+    logging.info('Parsing the configuration file...')
+    config = ConfigParser.RawConfigParser(allow_no_value=True)
+    config.read('config')
+    host = config.get('server', 'listeningAddr')
+    port = config.getint('server', 'listeningPort')
+
+    #socket init
+    logging.info('Socket initialization...')
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((host, port))
-    s.listen(backlog)
+    s.listen(5)
 
-    Server()
     #listening loop
     while 1:
         try:
