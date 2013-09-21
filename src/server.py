@@ -1,7 +1,6 @@
 import socket
 import sys
 import thread
-import modules.dummyModule
 
 list1 = []
 host = '127.0.0.1'
