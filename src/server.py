@@ -3,7 +3,8 @@ import sys
 import thread
 import ConfigParser
 import logging
-import datetime
+import traceback
+import modules.logger as logger
 
 buffSize = 4096
 
@@ -17,63 +18,71 @@ class SSClient:
     def __init__(self, socket, address):
         self.socket = socket
         self.address = address
-        print("In Server-Side client..." + str(address[0]) + ":" + str(address[1]))
+        self.formattedAddr = "[" + str(address[0]) + ":" + str(address[1]) + "]"
+        logger.log(logging.INFO, "New connection - Working node " + self.formattedAddr)
 
     def Listen(self):
-        print("SSClient is listening")
-        logging.info('In listen')
+        logger.log(logging.DEBUG, "Entering rcv loop")
+
         while 1:
             data = self.socket.recv(buffSize)
 
-            #Disconnection
+            #broken connection
             if not data:
-                print("Lost connection to client - Disconnecting...")
+                logger.log(logging.INFO, "Lost connection - Working node " + self.formattedAddr)
                 break
 
-            print(str(data))
+            logger.log(logging.DEBUG, "Data received " + self.formattedAddr + ": " + str(data))
 
     def Disconnect(self):
-        print("Disconnecting Server-Side client... - " + str(self.address))
+        logger.log(logging.INFO, "Disconnect request - Working node " + self.formattedAddr)
         self.socket.close()
 
 
 def ConnectionHandler(socket, address):
     client = SSClient(socket, address)
     try:
+        logger.log(logging.DEBUG, "About to start listening " + client.formattedAddr)
         client.Listen()
     except:
-        print("Exception raised in client.Listen() - " + str(address))
-        print("Error - " + str(sys.exc_info()[0]) + str(sys.exc_info()[1]))
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        message = "\n" + ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+        logger.log(logging.ERROR, message)
     finally:
         client.Disconnect()
 
 
 def main():
     #setup
-    logName = str(datetime.datetime.now())
-    logging.basicConfig(filename=logName, format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG)
+    logger.init()
+    logger.debugFlag = True
 
     #config
-    logging.info('Parsing the configuration file...')
+    logger.log(logging.INFO, "Parsing the configuration file")
     config = ConfigParser.RawConfigParser(allow_no_value=True)
     config.read('config')
     host = config.get('server', 'listeningAddr')
     port = config.getint('server', 'listeningPort')
 
     #socket init
-    logging.info('Socket initialization...')
+    logger.log(logging.INFO, "Socket initialization")
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((host, port))
     s.listen(5)
 
     #listening loop
+    #tempo for formatting
+    print("- - - - - - - - - - - - - - -")
+    logger.log(logging.INFO, "Waiting for working node to connect...")
     while 1:
         try:
             client, address = s.accept()
             thread.start_new_thread(ConnectionHandler, (client, address))
+
         except:
-            print("Exception raised in main loop - ")
-            print("Error - " + str(sys.exc_info()[0]) + str(sys.exc_info()[1]))
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+            logger.log(logging.CRITICAL, message)
             break
 
 if __name__ == "__main__":
