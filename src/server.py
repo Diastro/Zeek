@@ -1,8 +1,9 @@
+import ConfigParser
+import datetime
+import logging
 import socket
 import sys
 import thread
-import ConfigParser
-import logging
 import traceback
 import modules.logger as logger
 
@@ -22,7 +23,7 @@ class SSClient:
         logger.log(logging.INFO, "New connection - Working node " + self.formattedAddr)
 
     def Listen(self):
-        logger.log(logging.DEBUG, "Entering rcv loop")
+        logger.log(logging.INFO, "Listening for inputs " + self.formattedAddr)
 
         while 1:
             data = self.socket.recv(buffSize)
@@ -35,14 +36,13 @@ class SSClient:
             logger.log(logging.DEBUG, "Data received " + self.formattedAddr + ": " + str(data))
 
     def Disconnect(self):
-        logger.log(logging.INFO, "Disconnect request - Working node " + self.formattedAddr)
+        logger.log(logging.INFO, "Disconnecting - Working node " + self.formattedAddr)
         self.socket.close()
 
 
 def ConnectionHandler(socket, address):
     client = SSClient(socket, address)
     try:
-        logger.log(logging.DEBUG, "About to start listening " + client.formattedAddr)
         client.Listen()
     except:
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -54,7 +54,7 @@ def ConnectionHandler(socket, address):
 
 def main():
     #setup
-    logger.init()
+    logger.init("server-" + str(datetime.datetime.now()))
     logger.debugFlag = True
 
     #config
@@ -71,7 +71,6 @@ def main():
     s.listen(5)
 
     #listening loop
-    #tempo for formatting
     print("- - - - - - - - - - - - - - -")
     logger.log(logging.INFO, "Waiting for working node to connect...")
     while 1:

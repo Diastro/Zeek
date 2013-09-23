@@ -5,8 +5,7 @@ import datetime
 debugFlag = True
 
 
-def init():
-    logName = str(datetime.datetime.now())
+def init(logName):
     logging.basicConfig(filename=logName, format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG)
 
 
