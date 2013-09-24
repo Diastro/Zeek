@@ -13,7 +13,8 @@ buffSize = 4096
 
 def main():
     #setup
-    logger.init("client-" + str(datetime.datetime.now()))
+    logPath = 'logs/'
+    logger.init(logPath + "client-" + str(datetime.datetime.now()))
     logger.debugFlag = True
 
     #config

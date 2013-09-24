@@ -54,7 +54,8 @@ def ConnectionHandler(socket, address):
 
 def main():
     #setup
-    logger.init("server-" + str(datetime.datetime.now()))
+    logPath = 'logs/'
+    logger.init(logPath + "server-" + str(datetime.datetime.now()))
     logger.debugFlag = True
 
     #config
