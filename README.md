@@ -8,8 +8,8 @@ Python distributed web crawling scraper
 *David Albertson*
 
 ##Execution
-1) Take a look at the configuration file and change the host `address/port` and listening host `address/port` to the right addresses.
-  * change the server `listeningAddress / listeningPort`to the right info.
+1) Take a look at the configuration file and :
+  * change the server `listeningAddress / listeningPort`to the right info;
   * change the client `hostAddr / hostPort` to the right info.
 
 2) Launch the server on the **master** node
