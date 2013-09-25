@@ -1,0 +1,19 @@
+2013-09-25 17:40:08,440 INFO:Parsing the configuration file
+2013-09-25 17:40:08,440 INFO:Socket initialization
+2013-09-25 17:40:08,441 INFO:Connecting to host... [127.0.0.1:5050]
+2013-09-25 17:40:08,441 INFO:Connected to host [127.0.0.1:5050]
+2013-09-25 17:40:08,442 CRITICAL:
+
+ ************************
+Traceback (most recent call last):
+  File "client.py", line 56, in inputThread
+    deserializedPacket = pickle.loads(data)
+  File "/usr/lib/python2.7/pickle.py", line 1382, in loads
+    return Unpickler(file).load()
+  File "/usr/lib/python2.7/pickle.py", line 858, in load
+    dispatch[key](self)
+  File "/usr/lib/python2.7/pickle.py", line 880, in load_eof
+    raise EOFError
+EOFError
+
+2013-09-25 17:40:09,342 INFO:Exiting. ByeBye

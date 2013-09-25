@@ -1,0 +1,16 @@
+2013-09-25 18:13:53,723 INFO:Parsing the configuration file
+2013-09-25 18:13:53,724 INFO:Socket initialization
+2013-09-25 18:13:53,724 INFO:Connecting to host... [127.0.0.1:5050]
+2013-09-25 18:13:53,724 INFO:Connected to host [127.0.0.1:5050]
+2013-09-25 18:13:53,724 INFO:PacketProcessing started
+2013-09-25 18:13:53,725 DEBUG:[dispatcher - client.py, 84] Received : 29
+2013-09-25 18:13:53,726 CRITICAL:
+
+ ************************
+Traceback (most recent call last):
+  File "client.py", line 104, in packetInterpretingThread
+    if item.type == protocol.INFO:
+AttributeError: 'function' object has no attribute 'type'
+
+2013-09-25 18:13:53,826 DEBUG:[outputThread - client.py, 67] Sending : 30
+2013-09-25 18:13:54,626 INFO:Exiting. ByeBye

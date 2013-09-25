@@ -1,12 +1,16 @@
 import inspect
 import logging
 import datetime
+import os
 
 debugFlag = True
 
 
-def init(logName):
-    logging.basicConfig(filename=logName, format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG)
+def init(path, logName):
+    if not os.path.exists(path):
+        print path
+        os.makedirs(path)
+    logging.basicConfig(filename=path+logName, format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG)
 
 
 def debugFlag(flag):
@@ -34,3 +38,6 @@ def log(level, message):
     elif level is not logging.DEBUG:
         print(message)
     logging.log(level, message)
+
+def formatBrackets(message):
+    return "[" + str(message) + "]"

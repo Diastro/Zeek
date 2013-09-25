@@ -1,0 +1,6 @@
+2013-09-25 19:19:28,939 INFO:Parsing the configuration file
+2013-09-25 19:19:28,939 INFO:Socket initialization
+2013-09-25 19:19:28,940 INFO:Connecting to host... [127.0.0.1:5050]
+2013-09-25 19:19:28,940 INFO:Connected to host [127.0.0.1:5050]
+2013-09-25 19:19:28,941 DEBUG:[dispatcher - client.py, 79] Packet type INFO
+2013-09-25 19:19:28,941 DEBUG:[dispatcher - client.py, 79] Received : 11

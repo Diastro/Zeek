@@ -1,0 +1,18 @@
+2013-09-25 18:09:51,043 INFO:Parsing the configuration file
+2013-09-25 18:09:51,043 INFO:Socket initialization
+2013-09-25 18:09:51,043 INFO:Connecting to host... [127.0.0.1:5050]
+2013-09-25 18:09:51,043 INFO:Connected to host [127.0.0.1:5050]
+2013-09-25 18:09:51,044 INFO:PacketProcessing started
+2013-09-25 18:09:51,045 DEBUG:[dispatcher - client.py, 84] Received : 68
+2013-09-25 18:09:51,045 CRITICAL:
+
+ ************************
+Traceback (most recent call last):
+  File "client.py", line 99, in packetInterpretingThread
+    item = self.inputQueue.get (False)
+  File "/usr/lib/python2.7/Queue.py", line 165, in get
+    raise Empty
+Empty
+
+2013-09-25 18:09:51,145 DEBUG:[outputThread - client.py, 67] Sending : 69
+2013-09-25 18:09:51,945 INFO:Exiting. ByeBye

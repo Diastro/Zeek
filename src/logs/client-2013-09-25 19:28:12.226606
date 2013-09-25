@@ -1,0 +1,39 @@
+2013-09-25 19:28:12,226 INFO:Parsing the configuration file
+2013-09-25 19:28:12,227 INFO:Socket initialization
+2013-09-25 19:28:12,227 INFO:Connecting to host... [127.0.0.1:5050]
+2013-09-25 19:28:12,227 INFO:Connected to host [127.0.0.1:5050]
+2013-09-25 19:28:12,227 INFO:PacketProcessing started
+2013-09-25 19:28:12,228 DEBUG:[dispatcher - client.py, 79] Packet type INFO
+2013-09-25 19:28:12,228 DEBUG:[dispatcher - client.py, 79] Received : 32
+2013-09-25 19:28:12,728 DEBUG:[packetInterpretingThread - client.py, 92] INFO 
+2013-09-25 19:28:12,729 DEBUG:[outputThread - client.py, 67] Sending : 33
+2013-09-25 19:28:13,229 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:13,229 DEBUG:[dispatcher - client.py, 79] Packet type Status
+2013-09-25 19:28:13,230 DEBUG:[dispatcher - client.py, 79] Received : 43
+2013-09-25 19:28:13,730 DEBUG:[packetInterpretingThread - client.py, 92] STATUS 
+2013-09-25 19:28:14,231 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:14,732 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:15,233 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:15,734 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:16,234 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:16,735 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:17,236 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:17,737 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:18,238 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:18,739 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:19,239 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:19,740 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:20,241 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:20,742 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:21,243 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:21,743 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:22,244 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:22,745 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:23,246 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:23,746 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:24,247 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:24,748 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:25,249 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:25,749 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:26,250 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:28:26,751 DEBUG:[packetInterpretingThread - client.py, 92] Continue 

@@ -1,0 +1,28 @@
+2013-09-25 17:38:45,333 INFO:Parsing the configuration file
+2013-09-25 17:38:45,333 INFO:Socket initialization
+2013-09-25 17:38:45,333 INFO:Waiting for working node to connect...
+2013-09-25 17:38:47,071 INFO:New connection - Working node [127.0.0.1:43165]
+2013-09-25 17:38:47,071 INFO:Listening for inputs [127.0.0.1:43165]
+2013-09-25 17:38:47,072 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43165]: 82
+2013-09-25 17:39:35,076 INFO:Lost connection - Working node [127.0.0.1:43165]
+2013-09-25 17:39:35,076 INFO:Disconnecting - Working node [127.0.0.1:43165]
+2013-09-25 17:39:36,648 INFO:New connection - Working node [127.0.0.1:43166]
+2013-09-25 17:39:36,648 INFO:Listening for inputs [127.0.0.1:43166]
+2013-09-25 17:39:36,648 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43166]: 99
+2013-09-25 17:39:43,069 INFO:Lost connection - Working node [127.0.0.1:43166]
+2013-09-25 17:39:43,069 INFO:Disconnecting - Working node [127.0.0.1:43166]
+2013-09-25 17:39:44,647 INFO:New connection - Working node [127.0.0.1:43167]
+2013-09-25 17:39:44,648 INFO:Listening for inputs [127.0.0.1:43167]
+2013-09-25 17:39:44,648 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43167]: 81
+2013-09-25 17:39:46,719 INFO:Lost connection - Working node [127.0.0.1:43167]
+2013-09-25 17:39:46,719 INFO:Disconnecting - Working node [127.0.0.1:43167]
+2013-09-25 17:40:05,406 CRITICAL:
+
+ ************************
+Traceback (most recent call last):
+  File "server.py", line 34, in listen
+    client, address = self.s.accept()
+  File "/usr/lib/python2.7/socket.py", line 202, in accept
+    sock, addr = self._sock.accept()
+KeyboardInterrupt
+

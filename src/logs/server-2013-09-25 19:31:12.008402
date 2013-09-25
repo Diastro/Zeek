@@ -1,0 +1,89 @@
+2013-09-25 19:31:12,008 INFO:Parsing the configuration file
+2013-09-25 19:31:12,009 INFO:Socket initialization
+2013-09-25 19:31:12,009 INFO:Waiting for working node to connect...
+2013-09-25 19:31:13,554 INFO:New connection - Working node [127.0.0.1:43266]
+2013-09-25 19:31:13,555 INFO:Listening for inputs [127.0.0.1:43266]
+2013-09-25 19:31:13,555 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43266]: 61
+2013-09-25 19:31:13,566 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43266]: 62
+2013-09-25 19:31:14,067 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43266]: 7
+2013-09-25 19:31:14,076 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43266]: 8
+2013-09-25 19:31:14,577 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43266]: 98
+2013-09-25 19:31:14,585 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43266]: 99
+2013-09-25 19:31:15,086 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43266]: 30
+2013-09-25 19:31:15,095 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43266]: 31
+2013-09-25 19:31:15,596 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43266]: 78
+2013-09-25 19:31:15,604 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43266]: 79
+2013-09-25 19:31:16,105 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43266]: 10
+2013-09-25 19:31:16,113 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43266]: 11
+2013-09-25 19:31:16,614 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43266]: 38
+2013-09-25 19:31:16,623 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43266]: 39
+2013-09-25 19:31:17,124 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43266]: 90
+2013-09-25 19:31:17,133 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43266]: 91
+2013-09-25 19:31:17,634 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43266]: 85
+2013-09-25 19:31:17,642 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43266]: 86
+2013-09-25 19:31:18,143 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43266]: 12
+2013-09-25 19:31:18,152 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43266]: 13
+2013-09-25 19:31:18,653 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43266]: 34
+2013-09-25 19:31:18,662 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43266]: 35
+2013-09-25 19:31:19,163 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43266]: 24
+2013-09-25 19:31:19,172 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43266]: 25
+2013-09-25 19:31:19,673 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43266]: 77
+2013-09-25 19:31:19,682 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43266]: 78
+2013-09-25 19:31:20,183 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43266]: 46
+2013-09-25 19:31:20,183 INFO:Lost connection - Working node [127.0.0.1:43266]
+2013-09-25 19:31:20,183 INFO:Disconnecting - Working node [127.0.0.1:43266]
+2013-09-25 19:31:42,754 INFO:New connection - Working node [127.0.0.1:43267]
+2013-09-25 19:31:42,754 INFO:Listening for inputs [127.0.0.1:43267]
+2013-09-25 19:31:42,754 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43267]: 75
+2013-09-25 19:31:43,766 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43267]: 76
+2013-09-25 19:31:44,267 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43267]: 88
+2013-09-25 19:31:45,279 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43267]: 89
+2013-09-25 19:31:45,780 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43267]: 71
+2013-09-25 19:31:45,859 INFO:Lost connection - Working node [127.0.0.1:43267]
+2013-09-25 19:31:45,859 INFO:Disconnecting - Working node [127.0.0.1:43267]
+2013-09-25 19:33:27,129 INFO:New connection - Working node [127.0.0.1:43268]
+2013-09-25 19:33:27,129 INFO:Listening for inputs [127.0.0.1:43268]
+2013-09-25 19:33:27,129 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43268]: 49
+2013-09-25 19:33:28,033 INFO:Lost connection - Working node [127.0.0.1:43268]
+2013-09-25 19:33:28,033 INFO:Disconnecting - Working node [127.0.0.1:43268]
+2013-09-25 19:33:57,076 INFO:New connection - Working node [127.0.0.1:43269]
+2013-09-25 19:33:57,076 INFO:Listening for inputs [127.0.0.1:43269]
+2013-09-25 19:33:57,077 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43269]: 88
+2013-09-25 19:33:58,089 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43269]: 89
+2013-09-25 19:33:58,590 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43269]: 71
+2013-09-25 19:33:59,592 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43269]: 72
+2013-09-25 19:34:00,093 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43269]: 3
+2013-09-25 19:34:00,482 INFO:Lost connection - Working node [127.0.0.1:43269]
+2013-09-25 19:34:00,482 INFO:Disconnecting - Working node [127.0.0.1:43269]
+2013-09-25 19:36:03,844 INFO:New connection - Working node [127.0.0.1:43273]
+2013-09-25 19:36:03,844 INFO:Listening for inputs [127.0.0.1:43273]
+2013-09-25 19:36:03,844 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43273]: 36
+2013-09-25 19:36:04,856 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43273]: 37
+2013-09-25 19:36:05,357 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43273]: 98
+2013-09-25 19:36:05,378 INFO:Lost connection - Working node [127.0.0.1:43273]
+2013-09-25 19:36:05,378 INFO:Disconnecting - Working node [127.0.0.1:43273]
+2013-09-25 19:36:26,886 INFO:New connection - Working node [127.0.0.1:43274]
+2013-09-25 19:36:26,886 INFO:Listening for inputs [127.0.0.1:43274]
+2013-09-25 19:36:26,887 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43274]: 45
+2013-09-25 19:36:27,899 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43274]: 46
+2013-09-25 19:36:28,400 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43274]: 47
+2013-09-25 19:36:29,402 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43274]: 48
+2013-09-25 19:36:29,903 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43274]: 97
+2013-09-25 19:36:30,905 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43274]: 98
+2013-09-25 19:36:31,406 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43274]: 20
+2013-09-25 19:36:32,408 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43274]: 21
+2013-09-25 19:36:32,909 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43274]: 22
+2013-09-25 19:36:33,911 DEBUG:[Listen - server.py, 62] Data received [127.0.0.1:43274]: 23
+2013-09-25 19:36:34,412 DEBUG:[Listen - server.py, 62] Data sent [127.0.0.1:43274]: 24
+2013-09-25 19:36:35,329 INFO:Lost connection - Working node [127.0.0.1:43274]
+2013-09-25 19:36:35,329 INFO:Disconnecting - Working node [127.0.0.1:43274]
+2013-09-25 19:38:16,640 CRITICAL:
+
+ ************************
+Traceback (most recent call last):
+  File "server.py", line 34, in listen
+    client, address = self.s.accept()
+  File "/usr/lib/python2.7/socket.py", line 202, in accept
+    sock, addr = self._sock.accept()
+KeyboardInterrupt
+

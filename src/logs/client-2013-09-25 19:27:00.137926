@@ -1,0 +1,26 @@
+2013-09-25 19:27:00,138 INFO:Parsing the configuration file
+2013-09-25 19:27:00,138 INFO:Socket initialization
+2013-09-25 19:27:00,138 INFO:Connecting to host... [127.0.0.1:5050]
+2013-09-25 19:27:00,138 INFO:Connected to host [127.0.0.1:5050]
+2013-09-25 19:27:00,139 INFO:PacketProcessing started
+2013-09-25 19:27:00,139 DEBUG:[dispatcher - client.py, 79] Packet type INFO
+2013-09-25 19:27:00,140 DEBUG:[dispatcher - client.py, 79] Received : 95
+2013-09-25 19:27:00,640 DEBUG:[packetInterpretingThread - client.py, 92] INFO 
+2013-09-25 19:27:00,640 DEBUG:[outputThread - client.py, 67] Sending : 96
+2013-09-25 19:27:01,141 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:27:01,142 CRITICAL:
+
+ ************************
+Traceback (most recent call last):
+  File "client.py", line 59, in inputThread
+    deserializedPacket = pickle.loads(data)
+  File "/usr/lib/python2.7/pickle.py", line 1382, in loads
+    return Unpickler(file).load()
+  File "/usr/lib/python2.7/pickle.py", line 858, in load
+    dispatch[key](self)
+  File "/usr/lib/python2.7/pickle.py", line 880, in load_eof
+    raise EOFError
+EOFError
+
+2013-09-25 19:27:01,642 DEBUG:[packetInterpretingThread - client.py, 92] Continue 
+2013-09-25 19:27:01,941 INFO:Exiting. ByeBye

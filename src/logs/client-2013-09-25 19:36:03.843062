@@ -1,0 +1,10 @@
+2013-09-25 19:36:03,843 INFO:Parsing the configuration file
+2013-09-25 19:36:03,843 INFO:Socket initialization
+2013-09-25 19:36:03,844 INFO:Connecting to host... [127.0.0.1:5050]
+2013-09-25 19:36:03,844 INFO:Connected to host [127.0.0.1:5050]
+2013-09-25 19:36:03,844 INFO:PacketProcessing started
+2013-09-25 19:36:03,845 DEBUG:[dispatcher - client.py, 78] Received : 36
+2013-09-25 19:36:03,854 DEBUG:[deQueue - /home/pag/Zeek/src/modules/protocol.py, 16] Added packet [1] to queue.
+2013-09-25 19:36:04,856 DEBUG:[outputThread - client.py, 66] Sending : 37
+2013-09-25 19:36:05,357 DEBUG:[dispatcher - client.py, 78] Received : 98
+2013-09-25 19:36:05,367 DEBUG:[deQueue - /home/pag/Zeek/src/modules/protocol.py, 16] Added packet [1] to queue.

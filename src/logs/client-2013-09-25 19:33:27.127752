@@ -1,0 +1,20 @@
+2013-09-25 19:33:27,127 INFO:Parsing the configuration file
+2013-09-25 19:33:27,128 INFO:Socket initialization
+2013-09-25 19:33:27,128 INFO:Connecting to host... [127.0.0.1:5050]
+2013-09-25 19:33:27,128 INFO:Connected to host [127.0.0.1:5050]
+2013-09-25 19:33:27,129 INFO:PacketProcessing started
+2013-09-25 19:33:27,129 DEBUG:[dispatcher - client.py, 79] Packet type INFO
+2013-09-25 19:33:27,129 DEBUG:[dispatcher - client.py, 79] Received : 49
+2013-09-25 19:33:27,139 CRITICAL:
+
+ ************************
+Traceback (most recent call last):
+  File "client.py", line 97, in packetInterpretingThread
+    packets = protocol.deQueue([self.urlToVisit, self.infoQueue])
+  File "/home/pag/Zeek/src/modules/protocol.py", line 22, in deQueue
+    logger.log(logging.DEBUG, "Added packet " + logger.formatBrackets(packet.type) + " to queue.")
+  File "/home/pag/Zeek/src/modules/logger.py", line 43, in formatBrackets
+    return str("[" + message + "]")
+TypeError: cannot concatenate 'str' and 'int' objects
+
+2013-09-25 19:33:28,030 INFO:Exiting. ByeBye

@@ -1,0 +1,18 @@
+2013-09-25 19:31:42,753 INFO:Parsing the configuration file
+2013-09-25 19:31:42,753 INFO:Socket initialization
+2013-09-25 19:31:42,754 INFO:Connecting to host... [127.0.0.1:5050]
+2013-09-25 19:31:42,754 INFO:Connected to host [127.0.0.1:5050]
+2013-09-25 19:31:42,754 INFO:PacketProcessing started
+2013-09-25 19:31:42,755 DEBUG:[dispatcher - client.py, 79] Packet type INFO
+2013-09-25 19:31:42,755 DEBUG:[dispatcher - client.py, 79] Received : 75
+2013-09-25 19:31:42,765 DEBUG:[deQueue - /home/pag/Zeek/src/modules/protocol.py, 16] Added packet to queue : <Queue.Queue instance at 0xb6fd0acc>
+2013-09-25 19:31:43,766 DEBUG:[packetInterpretingThread - client.py, 92] INFO 
+2013-09-25 19:31:43,766 DEBUG:[outputThread - client.py, 67] Sending : 76
+2013-09-25 19:31:44,267 DEBUG:[dispatcher - client.py, 79] Packet type INFO
+2013-09-25 19:31:44,267 DEBUG:[dispatcher - client.py, 79] Received : 88
+2013-09-25 19:31:44,277 DEBUG:[deQueue - /home/pag/Zeek/src/modules/protocol.py, 16] Added packet to queue : <Queue.Queue instance at 0xb6fd0acc>
+2013-09-25 19:31:45,278 DEBUG:[packetInterpretingThread - client.py, 92] INFO 
+2013-09-25 19:31:45,279 DEBUG:[outputThread - client.py, 67] Sending : 89
+2013-09-25 19:31:45,780 DEBUG:[dispatcher - client.py, 79] Packet type INFO
+2013-09-25 19:31:45,780 DEBUG:[dispatcher - client.py, 79] Received : 71
+2013-09-25 19:31:45,780 DEBUG:[deQueue - /home/pag/Zeek/src/modules/protocol.py, 16] Added packet to queue : <Queue.Queue instance at 0xb6fd0acc>

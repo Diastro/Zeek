@@ -1,0 +1,19 @@
+2013-09-25 19:43:12,319 INFO:Parsing the configuration file
+2013-09-25 19:43:12,320 INFO:Socket initialization
+2013-09-25 19:43:12,320 INFO:Connecting to host... [127.0.0.1:5050]
+2013-09-25 19:43:12,320 INFO:Connected to host [127.0.0.1:5050]
+2013-09-25 19:43:12,320 INFO:Interpreting started
+2013-09-25 19:43:12,321 DEBUG:[dispatcher - client.py, 82] Received : 100
+2013-09-25 19:43:12,331 DEBUG:[outputThread - client.py, 70] Sending : 101
+2013-09-25 19:43:12,832 DEBUG:[dispatcher - client.py, 82] Received : 60
+2013-09-25 19:43:12,840 DEBUG:[outputThread - client.py, 70] Sending : 61
+2013-09-25 19:43:13,341 DEBUG:[dispatcher - client.py, 82] Received : 10
+2013-09-25 19:43:13,348 DEBUG:[outputThread - client.py, 70] Sending : 11
+2013-09-25 19:43:13,849 DEBUG:[dispatcher - client.py, 82] Received : 93
+2013-09-25 19:43:13,856 DEBUG:[outputThread - client.py, 70] Sending : 94
+2013-09-25 19:43:14,358 DEBUG:[dispatcher - client.py, 82] Received : 23
+2013-09-25 19:43:14,365 DEBUG:[outputThread - client.py, 70] Sending : 24
+2013-09-25 19:43:14,866 DEBUG:[dispatcher - client.py, 82] Received : 9
+2013-09-25 19:43:14,873 DEBUG:[outputThread - client.py, 70] Sending : 10
+2013-09-25 19:43:15,170 INFO:Lost connection to server [127.0.0.1:5050]
+2013-09-25 19:43:15,924 INFO:Exiting. ByeBye
