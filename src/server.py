@@ -1,15 +1,15 @@
 import ConfigParser
 import datetime
 import logging
+import pickle
+import random
 import socket
 import sys
 import thread
+import time
 import traceback
 import modules.logger as logger
 import modules.protocol as protocol
-import pickle
-import random
-import time
 
 buffSize = 4096
 
@@ -94,23 +94,25 @@ class SSClient:
 
 
 def main():
-    #logging
-    logPath = 'logs/'
-    logger.init(logPath, "server-" + str(datetime.datetime.now()))
-    logger.debugFlag = True
-
-    #config
-    logger.log(logging.INFO, "Parsing the configuration file")
     config = ConfigParser.RawConfigParser(allow_no_value=True)
     config.read('config')
     host = config.get('server', 'listeningAddr')
     port = config.getint('server', 'listeningPort')
+    logPath = config.get('common', 'logPath')
+    verbose = config.get('common', 'verbose')
+    if verbose == "True" or verbose == "true":
+        verbose = True
+    else:
+        verbose = False
+
+    #logging
+    logger.init(logPath, "server-" + str(datetime.datetime.now()))
+    logger.debugFlag = verbose
 
     #server
     server = Server(host, port)
     server.socketSetup()
     server.listen()
-
 
 if __name__ == "__main__":
     main()

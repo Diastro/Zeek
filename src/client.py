@@ -1,15 +1,15 @@
 import ConfigParser
 import datetime
+import Queue
 import logging
+import pickle
 import socket
 import sys
 import time
+import thread
 import traceback
 import modules.logger as logger
 import modules.protocol as protocol
-import pickle
-import thread
-import Queue
 
 buffSize = 4096
 
@@ -124,17 +124,23 @@ class WorkingNode():
 
 
 def main():
-    #setup
-    logPath = 'logs/'
-    logger.init(logPath, "client-" + str(datetime.datetime.now()))
-    logger.debugFlag = True
-
     #config
     logger.log(logging.INFO, "Parsing the configuration file")
     config = ConfigParser.RawConfigParser(allow_no_value=True)
     config.read('config')
     host = config.get('client', 'hostAddr')
     port = config.getint('client', 'hostPort')
+    logPath = config.get('common', 'logPath')
+    verbose = config.get('common', 'verbose')
+    if verbose == "True" or verbose == "true":
+        verbose = True
+    else:
+        verbose = False
+
+    #setup
+    logPath = logPath
+    logger.init(logPath, "client-" + str(datetime.datetime.now()))
+    logger.debugFlag = verbose
 
     node = WorkingNode()
     node.connect(host, port)
