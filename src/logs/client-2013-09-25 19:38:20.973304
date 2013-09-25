@@ -1,6 +1,0 @@
-2013-09-25 19:38:20,973 INFO:Parsing the configuration file
-2013-09-25 19:38:20,974 INFO:Socket initialization
-2013-09-25 19:38:20,974 INFO:Connecting to host... [127.0.0.1:5050]
-2013-09-25 19:38:20,974 INFO:Connected to host [127.0.0.1:5050]
-2013-09-25 19:38:20,974 INFO:PacketProcessing started
-2013-09-25 19:38:20,975 DEBUG:[dispatcher - client.py, 78] Received : 28

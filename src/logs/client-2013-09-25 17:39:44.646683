@@ -1,8 +1,0 @@
-2013-09-25 17:39:44,646 INFO:Parsing the configuration file
-2013-09-25 17:39:44,647 INFO:Socket initialization
-2013-09-25 17:39:44,647 INFO:Connecting to host... [127.0.0.1:5050]
-2013-09-25 17:39:44,647 INFO:Connected to host [127.0.0.1:5050]
-2013-09-25 17:39:44,648 CRITICAL:
-
- ************************
-Unrecognized packet type : Type1. The packet was dropped

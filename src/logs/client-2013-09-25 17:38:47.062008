@@ -1,9 +1,0 @@
-2013-09-25 17:38:47,062 INFO:Parsing the configuration file
-2013-09-25 17:38:47,071 INFO:Socket initialization
-2013-09-25 17:38:47,071 INFO:Connecting to host... [127.0.0.1:5050]
-2013-09-25 17:38:47,071 INFO:Connected to host [127.0.0.1:5050]
-2013-09-25 17:38:47,072 CRITICAL:
-
- ************************
-Unrecognized packet type : Type1. The packet was dropped
-2013-09-25 17:38:47,072 DEBUG:[inputThread - client.py, 52] Received : 82
