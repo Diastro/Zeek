@@ -1,6 +1,5 @@
 import inspect
 import logging
-import datetime
 import os
 
 debugFlag = True
@@ -38,6 +37,7 @@ def log(level, message):
     elif level is not logging.DEBUG:
         print(message)
     logging.log(level, message)
+
 
 def formatBrackets(message):
     return "[" + str(message) + "]"

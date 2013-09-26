@@ -26,6 +26,11 @@ class Server:
         self.s.bind((self.host, self.port))
         self.s.listen(5)
 
+    def beginCrawlingProcedure(self):
+        logger.log(logging.INFO, "Starting beginCrawlingProcedure")
+        thread.start_new_thread(self.urlDispatcher, ())
+        thread.start_new_thread(self.mainRoutine, ())
+
     def listen(self):
         print("- - - - - - - - - - - - - - -")
         logger.log(logging.INFO, "Waiting for working node to connect...")
@@ -49,6 +54,12 @@ class Server:
             logger.log(logging.ERROR, message)
         finally:
             client.Disconnect()
+
+    def urlDispatcher(self):
+        logger.log(logging.INFO, "Starting urlDispatcher")
+
+    def mainRoutine(self):
+        logger.log(logging.INFO, "Starting mainRoutine")
 
 
 class SSClient:
@@ -86,7 +97,7 @@ class SSClient:
             unserializedObj = pickle.loads(data)
             logger.log(logging.DEBUG, "Data received " + self.formattedAddr + ": " + str(unserializedObj.payload))
 
-            time.sleep(0.5) #temp - For testing
+            #time.sleep(0.5) #temp - For testing
 
     def Disconnect(self):
         logger.log(logging.INFO, "Disconnecting - Working node " + self.formattedAddr)

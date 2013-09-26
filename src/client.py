@@ -125,7 +125,6 @@ class WorkingNode():
 
 def main():
     #config
-    logger.log(logging.INFO, "Parsing the configuration file")
     config = ConfigParser.RawConfigParser(allow_no_value=True)
     config.read('config')
     host = config.get('client', 'hostAddr')
@@ -138,7 +137,6 @@ def main():
         verbose = False
 
     #setup
-    logPath = logPath
     logger.init(logPath, "client-" + str(datetime.datetime.now()))
     logger.debugFlag = verbose
 
