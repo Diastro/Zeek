@@ -6,7 +6,6 @@ import random
 import socket
 import sys
 import thread
-import time
 import traceback
 import modules.logger as logger
 import modules.protocol as protocol

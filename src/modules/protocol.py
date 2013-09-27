@@ -1,6 +1,4 @@
 import Queue
-import logger
-import logging
 
 INFO = 1
 URL = 2
