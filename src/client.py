@@ -41,26 +41,50 @@ class WorkingNode():
                 logger.log(logging.INFO, "Connecting to host... " + self.masterNodeFormattedAddr)
                 self.s.connect((self.host, self.port))
                 logger.log(logging.INFO, "Connected to host " + self.masterNodeFormattedAddr)
-                thread.start_new_thread(self.outputThread, ())
-                thread.start_new_thread(self.inputThread, ())
-                thread.start_new_thread(self.interpretingThread, ())
-                #thread.start_new_thread(self.crawlingThread, ())
+                logger.log(logging.INFO, "Reading config " + self.masterNodeFormattedAddr)
                 break
             except socket.error:
                 logger.log(logging.INFO, "Connection failed to " + self.masterNodeFormattedAddr)
                 logger.log(logging.INFO, "Retrying in 3 seconds.")
                 time.sleep(3)
 
+    def readConfig(self):
+        if self.isActive:
+            try:
+                deserializedPacket = self.readSocket(10)
+                if deserializedPacket.type is protocol.CONFIG:
+                    self.crawlingType = deserializedPacket.payload.crawlingType
+                    payload = protocol.InfoPayload(protocol.InfoPayload.CLIENT_ACK)
+                    packet = protocol.Packet(protocol.INFO, payload)
+                    self.writeSocket(packet)
+                    logger.log(logging.DEBUG, "Sending ACK for config")
+                else:
+                    raise Exception("Unable to parse configuration from the server.")
+            except:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+                logger.log(logging.CRITICAL, message)
+                self.isActive = False
+
+    def run(self):
+        if self.isActive:
+            thread.start_new_thread(self.outputThread, ())
+            thread.start_new_thread(self.inputThread, ())
+            thread.start_new_thread(self.interpretingThread, ())
+            #thread.start_new_thread(self.crawlingThread, ())
+
+    def disconnect(self):
+        self.s.close()
+
     def inputThread(self):
+        logger.log(logging.DEBUG, "InputThread started")
+
         while self.isActive:
             try:
-                data = self.s.recv(buffSize)
-                if not data:
-                    logger.log(logging.INFO, "Lost connection to server " + self.masterNodeFormattedAddr)
-                    self.isActive = False
-                    break
-                deserializedPacket = pickle.loads(data)
+                deserializedPacket = self.readSocket()
                 self.dispatcher(deserializedPacket)
+            except EOFError:
+                self.isActive = False
             except:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
@@ -68,30 +92,21 @@ class WorkingNode():
                 self.isActive = False
 
     def outputThread(self):
+        logger.log(logging.DEBUG, "OutputThread started")
+
         while self.isActive:
             try:
-                packet = self.outputQueue.get(True)
-                self.s.send(pickle.dumps(packet))
-                logger.log(logging.DEBUG, "Sending : " + str(packet.payload))
+                obj = self.outputQueue.get(True)
+                self.writeSocket(obj)
+                logger.log(logging.DEBUG, "Sending obj of type " + str(obj.type))
             except:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
                 logger.log(logging.CRITICAL, message)
                 self.isActive = False
 
-    def dispatcher(self, packet):
-        if packet.type is protocol.INFO:
-            self.infoQueue.put(packet)
-        elif packet.type is protocol.URL:
-            self.urlToVisit.put(packet)
-        else:
-            logger.log(logging.CRITICAL, "Unrecognized packet type : " + str(packet.type) + ". This packet was dropped")
-            return
-
-        logger.log(logging.DEBUG, "Received : " + str(packet.payload))
-
     def interpretingThread(self):
-        logger.log(logging.INFO, "Interpreting started")
+        logger.log(logging.DEBUG, "InterpretingThread started")
 
         while self.isActive:
             try:
@@ -117,10 +132,33 @@ class WorkingNode():
                 self.isActive = False
 
     def crawlingThread(self):
-        logger.log(logging.INFO, "Crawler started")
+        logger.log(logging.DEBUG, "CrawlingThread started")
 
-    def disconnect(self):
-        self.s.close()
+    def writeSocket(self, obj):
+        serializedObj = pickle.dumps(obj)
+        self.s.send(serializedObj)
+
+    def readSocket(self, timeOut=None):
+        self.s.settimeout(timeOut)
+        data = self.s.recv(buffSize)
+
+        #broken connection
+        if not data:
+            logger.log(logging.INFO, "Lost connection to server " + self.masterNodeFormattedAddr)
+            self.isActive = False
+
+        return pickle.loads(data)
+
+    def dispatcher(self, packet):
+        if packet.type is protocol.INFO:
+            self.infoQueue.put(packet)
+        elif packet.type is protocol.URL:
+            self.urlToVisit.put(packet)
+        else:
+            logger.log(logging.CRITICAL, "Unrecognized packet type : " + str(packet.type) + ". This packet was dropped")
+            return
+
+        logger.log(logging.DEBUG, "Dispatched packet of type: " + str(packet.type))
 
 
 def main():
@@ -142,9 +180,11 @@ def main():
 
     node = WorkingNode()
     node.connect(host, port)
+    node.readConfig()
+    node.run()
 
     while node.isActive:
-        time.sleep(0.9)
+        time.sleep(0.5)
 
     node.disconnect()
     logger.log(logging.INFO, "Exiting. ByeBye")

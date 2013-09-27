@@ -2,11 +2,12 @@ import ConfigParser
 import datetime
 import logging
 import pickle
-import random
 import socket
 import sys
+import time
 import thread
 import traceback
+import uuid
 import modules.logger as logger
 import modules.protocol as protocol
 
@@ -18,6 +19,8 @@ class Server:
         self.host = host
         self.port = port
         self.s = None
+        self.clientDict = {}
+        self.isActive = True
 
     def socketSetup(self):
         logger.log(logging.INFO, "Socket initialization")
@@ -33,7 +36,7 @@ class Server:
     def listen(self):
         print("- - - - - - - - - - - - - - -")
         logger.log(logging.INFO, "Waiting for working node to connect...")
-        while 1:
+        while self.isActive:
             try:
                 client, address = self.s.accept()
                 thread.start_new_thread(self.connectionHandler, (client, address))
@@ -41,18 +44,28 @@ class Server:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
                 logger.log(logging.CRITICAL, message)
-                break
+                self.isActive = False
 
     def connectionHandler(self, socket, address):
-        client = SSClient(socket, address)
+        clientID = uuid.uuid4()
+        client = SSClient(clientID, socket, address)
+        self.clientDict[clientID] = client
+
+        for clients in self.clientDict:
+            logger.log(logging.DEBUG, "Connected : " + str(self.clientDict[clients].id))
+
         try:
-            client.Listen()
+            client.sendConfig()
+            client.listen()
+        except EOFError:
+            pass
         except:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             message = "\n" + ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
             logger.log(logging.ERROR, message)
         finally:
-            client.Disconnect()
+            client.disconnect()
+            del self.clientDict[clientID]
 
     def urlDispatcher(self):
         logger.log(logging.INFO, "Starting urlDispatcher")
@@ -60,45 +73,62 @@ class Server:
     def mainRoutine(self):
         logger.log(logging.INFO, "Starting mainRoutine")
 
+    def disconnectAllClient(self):
+        for connectedClient in self.clientDict:
+            self.clientDict[connectedClient].disconnect()
+            logger.log(logging.DEBUG, "Disconnected : " + str(self.clientDict[connectedClient].id))
+
 
 class SSClient:
-    def __init__(self, socket, address):
+    def __init__(self, cId, socket, address):
+        self.id = cId
         self.socket = socket
         self.address = address
         self.isActive = True
         self.formattedAddr = logger.formatBrackets(str(str(address[0]) + ":" + str(address[1])))
         logger.log(logging.INFO, "New connection - Working node " + self.formattedAddr)
 
-    def Listen(self):
+    def listen(self):
         logger.log(logging.INFO, "Listening for inputs " + self.formattedAddr)
 
         while self.isActive:
-            #Packet creation
-            val = str(random.randint(1, 100))
-            packet = protocol.Packet(protocol.INFO)
-            packet.payload = val
-            serializedObj = pickle.dumps(packet)
+            self.readSocket()
+            time.sleep(1)
 
-            #send
-            self.socket.send(serializedObj)
-            logger.log(logging.DEBUG, "Data sent " + self.formattedAddr + ": " + val)
+    def sendConfig(self):
+        logger.log(logging.INFO, "Sending config to " + self.formattedAddr)
 
-            #receive - For testing
-            data = self.socket.recv(buffSize)
+        payload = protocol.ConfigurationPayload(protocol.ConfigurationPayload.DYNAMIC_CRAWLING)
+        packet = protocol.Packet(protocol.CONFIG, payload)
+        self.writeSocket(packet)
+        logger.log(logging.DEBUG, "Config sent " + self.formattedAddr)
 
-            #broken connection
-            if not data:
-                logger.log(logging.INFO, "Lost connection - Working node " + self.formattedAddr)
+        packet = self.readSocket(5)
+
+        if packet.type == protocol.INFO:
+            if packet.payload.info == protocol.InfoPayload.CLIENT_ACK:
+                logger.log(logging.DEBUG, "Client ack received " + self.formattedAddr)
+                return
+            else:
                 self.isActive = False
-                break
+                raise Exception("Unable to transmit configuration")
 
-            #packet treatment
-            unserializedObj = pickle.loads(data)
-            logger.log(logging.DEBUG, "Data received " + self.formattedAddr + ": " + str(unserializedObj.payload))
+    def writeSocket(self, obj):
+        serializedObj = pickle.dumps(obj)
+        self.socket.send(serializedObj)
 
-            #time.sleep(0.5) #temp - For testing
+    def readSocket(self, timeOut=None):
+        self.socket.settimeout(timeOut)
+        data = self.socket.recv(buffSize)
 
-    def Disconnect(self):
+        #broken connection
+        if not data:
+            logger.log(logging.INFO, "Lost connection - Working node " + self.formattedAddr)
+            self.isActive = False
+
+        return pickle.loads(data)
+
+    def disconnect(self):
         logger.log(logging.INFO, "Disconnecting - Working node " + self.formattedAddr)
         self.socket.close()
 
@@ -122,7 +152,13 @@ def main():
     #server
     server = Server(host, port)
     server.socketSetup()
-    server.listen()
+    #server.listen()
+    thread.start_new_thread(server.listen, ()) #testing
+
+    #time.sleep(9) #testing
+    #server.isActive = False
+    #server.disconnectAllClient()
+    logger.log(logging.INFO, "Exiting. ByeBye")
 
 if __name__ == "__main__":
     main()
