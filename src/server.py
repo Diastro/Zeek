@@ -2,6 +2,8 @@ import ConfigParser
 import datetime
 import logging
 import pickle
+import Queue
+import signal
 import socket
 import sys
 import time
@@ -13,6 +15,10 @@ import modules.protocol as protocol
 
 buffSize = 4096
 
+urlVisited = {} # url already visited
+urlPool = Queue.Queue(0) # url pool arriving from working nodes
+urlToVisit = Queue.Queue(0) # url to be visited by working nodes
+
 
 class Server:
     def __init__(self, host, port):
@@ -23,19 +29,20 @@ class Server:
         self.isActive = True
 
     def socketSetup(self):
-        logger.log(logging.INFO, "Socket initialization")
+        logger.log(logging.DEBUG, "Socket initialization")
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.bind((self.host, self.port))
         self.s.listen(5)
+        logger.log(logging.INFO, "Listening on [" + str(self.host) + ":" + str(self.port) + "]")
 
     def beginCrawlingProcedure(self):
-        logger.log(logging.INFO, "Starting beginCrawlingProcedure")
+        logger.log(logging.DEBUG, "Starting beginCrawlingProcedure")
         thread.start_new_thread(self.urlDispatcher, ())
         thread.start_new_thread(self.mainRoutine, ())
 
     def listen(self):
         print("- - - - - - - - - - - - - - -")
-        logger.log(logging.INFO, "Waiting for working node to connect...")
+        logger.log(logging.INFO, "Waiting for working nodes to connect...")
         while self.isActive:
             try:
                 client, address = self.s.accept()
@@ -52,7 +59,7 @@ class Server:
         self.clientDict[clientID] = client
 
         for clients in self.clientDict:
-            logger.log(logging.DEBUG, "Connected : " + str(self.clientDict[clients].id))
+            logger.log(logging.DEBUG, "Working node connected : " + str(self.clientDict[clients].id))
 
         try:
             client.sendConfig()
@@ -86,28 +93,28 @@ class SSClient:
         self.address = address
         self.isActive = True
         self.formattedAddr = logger.formatBrackets(str(str(address[0]) + ":" + str(address[1])))
-        logger.log(logging.INFO, "New connection - Working node " + self.formattedAddr)
+        logger.log(logging.INFO, "Working node connected " + self.formattedAddr)
 
     def listen(self):
-        logger.log(logging.INFO, "Listening for inputs " + self.formattedAddr)
+        logger.log(logging.DEBUG, "Listening for packets " + self.formattedAddr)
 
         while self.isActive:
             self.readSocket()
             time.sleep(1)
 
     def sendConfig(self):
-        logger.log(logging.INFO, "Sending config to " + self.formattedAddr)
+        logger.log(logging.DEBUG, "Sending configuration to " + self.formattedAddr)
 
         payload = protocol.ConfigurationPayload(protocol.ConfigurationPayload.DYNAMIC_CRAWLING)
         packet = protocol.Packet(protocol.CONFIG, payload)
         self.writeSocket(packet)
-        logger.log(logging.DEBUG, "Config sent " + self.formattedAddr)
 
+        logger.log(logging.DEBUG, "Configuration sent waiting for ACK. " + self.formattedAddr)
         packet = self.readSocket(5)
 
         if packet.type == protocol.INFO:
             if packet.payload.info == protocol.InfoPayload.CLIENT_ACK:
-                logger.log(logging.DEBUG, "Client ack received " + self.formattedAddr)
+                logger.log(logging.DEBUG, "Working node ACK received (configuration) " + self.formattedAddr)
                 return
             else:
                 self.isActive = False
@@ -129,11 +136,17 @@ class SSClient:
         return pickle.loads(data)
 
     def disconnect(self):
-        logger.log(logging.INFO, "Disconnecting - Working node " + self.formattedAddr)
+        logger.log(logging.DEBUG, "Disconnecting - Working node " + self.formattedAddr)
         self.socket.close()
 
 
+def handler(signum, frame):
+        print ("Exiting. ByeBye")
+        sys.exit()
+
 def main():
+    signal.signal(signal.SIGINT, handler)
+    logger.printAsciiLogo()
     config = ConfigParser.RawConfigParser(allow_no_value=True)
     config.read('config')
     host = config.get('server', 'listeningAddr')
@@ -155,10 +168,14 @@ def main():
     #server.listen()
     thread.start_new_thread(server.listen, ()) #testing
 
+    while server.isActive:
+        time.sleep(0.5)
+
     #time.sleep(9) #testing
     #server.isActive = False
     #server.disconnectAllClient()
     logger.log(logging.INFO, "Exiting. ByeBye")
+
 
 if __name__ == "__main__":
     main()

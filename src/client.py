@@ -31,17 +31,16 @@ class WorkingNode():
         self.port = port
         self.masterNodeFormattedAddr = "[" + str(self.host) + ":" + str(self.port) + "]"
 
-        logger.log(logging.INFO, "Socket initialization")
+        logger.log(logging.DEBUG, "Socket initialization")
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         for connectionAttempt in range(3, 0, -1):
             if connectionAttempt == 1:
                 logger.log(logging.CRITICAL, "Unable to connect to host " + self.masterNodeFormattedAddr)
                 sys.exit()
             try:
-                logger.log(logging.INFO, "Connecting to host... " + self.masterNodeFormattedAddr)
+                logger.log(logging.DEBUG, "Connecting to host... " + self.masterNodeFormattedAddr)
                 self.s.connect((self.host, self.port))
-                logger.log(logging.INFO, "Connected to host " + self.masterNodeFormattedAddr)
-                logger.log(logging.INFO, "Reading config " + self.masterNodeFormattedAddr)
+                logger.log(logging.INFO, "Connected to " + self.masterNodeFormattedAddr)
                 break
             except socket.error:
                 logger.log(logging.INFO, "Connection failed to " + self.masterNodeFormattedAddr)
@@ -49,17 +48,19 @@ class WorkingNode():
                 time.sleep(3)
 
     def readConfig(self):
+        logger.log(logging.DEBUG, "Waiting for configuration from the server.")
         if self.isActive:
             try:
-                deserializedPacket = self.readSocket(10)
+                deserializedPacket = self.readSocket()
                 if deserializedPacket.type is protocol.CONFIG:
                     self.crawlingType = deserializedPacket.payload.crawlingType
                     payload = protocol.InfoPayload(protocol.InfoPayload.CLIENT_ACK)
                     packet = protocol.Packet(protocol.INFO, payload)
                     self.writeSocket(packet)
-                    logger.log(logging.DEBUG, "Sending ACK for config")
+                    logger.log(logging.DEBUG, "Configuration received.")
+                    logger.log(logging.DEBUG, "Sending ACK for configuration.")
                 else:
-                    raise Exception("Unable to parse configuration from the server.")
+                    raise Exception("Unable to parse configuration.")
             except:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
@@ -169,6 +170,7 @@ def main():
     port = config.getint('client', 'hostPort')
     logPath = config.get('common', 'logPath')
     verbose = config.get('common', 'verbose')
+
     if verbose == "True" or verbose == "true":
         verbose = True
     else:
