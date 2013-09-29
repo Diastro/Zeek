@@ -124,7 +124,7 @@ class WorkingNode():
                     if packet.type is protocol.URL:
                         #visiting site
                         logger.log(logging.INFO, "Visiting site : " + str(packet.payload.urlList))
-                        self.outputQueue.put(packet)
+                        #self.outputQueue.put(packet)
             except:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))

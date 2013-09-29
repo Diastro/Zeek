@@ -47,11 +47,6 @@ class Server:
             try:
                 client, address = self.s.accept()
                 thread.start_new_thread(self.connectionHandler, (client, address))
-
-                #temp testing
-                logger.log(logging.DEBUG, str(len(self.clientDict)))
-                if len(self.clientDict) == 1:
-                    self.run()
             except:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
@@ -62,6 +57,10 @@ class Server:
         clientID = uuid.uuid4()
         client = SSClient(clientID, socket, address)
         self.clientDict[clientID] = client
+
+        #temp testing
+        if len(self.clientDict) > 0:
+            self.run()
 
         for clients in self.clientDict:
             logger.log(logging.DEBUG, "Working node connected : " + str(self.clientDict[clients].id))
@@ -95,8 +94,9 @@ class Server:
     def mainRoutine(self):
         logger.log(logging.INFO, "Starting mainRoutine")
 
-        #while self.isActive:
-        urlPool.put("http://www.lapresse.ca")
+        while self.isActive:
+            urlPool.put("http://www.lapresse.ca" + str(datetime.datetime.now()))
+            time.sleep(2)
 
     def disconnectAllClient(self):
         for connectedClient in self.clientDict:
@@ -173,8 +173,12 @@ class SSClient:
                 raise Exception("Unable to transmit configuration")
 
     def writeSocket(self, obj):
-        serializedObj = pickle.dumps(obj)
-        self.socket.send(serializedObj)
+        try:
+            logger.log(logging.DEBUG, "Write " + self.formattedAddr)
+            serializedObj = pickle.dumps(obj)
+            self.socket.send(serializedObj)
+        except:
+            raise Exception("Error writting")
 
     def readSocket(self, timeOut=None):
         self.socket.settimeout(timeOut)
