@@ -10,6 +10,7 @@ import thread
 import traceback
 import modules.logger as logger
 import modules.protocol as protocol
+from server import urlToVisit
 
 buffSize = 4096
 
@@ -72,9 +73,10 @@ class WorkingNode():
             thread.start_new_thread(self.outputThread, ())
             thread.start_new_thread(self.inputThread, ())
             thread.start_new_thread(self.interpretingThread, ())
-            #thread.start_new_thread(self.crawlingThread, ())
+            thread.start_new_thread(self.crawlingThread, ())
 
     def disconnect(self):
+        self.isActive = False
         self.s.close()
 
     def inputThread(self):
@@ -112,19 +114,16 @@ class WorkingNode():
         while self.isActive:
             try:
                 time.sleep(0.01) #temp - For testing
-                packets = protocol.deQueue([self.urlToVisit, self.infoQueue])
+                #packets = protocol.deQueue([self.urlToVisit, self.infoQueue])
+                packets = protocol.deQueue([self.urlToVisit])
 
                 if not packets:
                     continue
 
                 for packet in packets:
-                    if packet.type == protocol.INFO:
-                        val = int(packet.payload)
-                        packet.payload = val+1
-                        self.outputQueue.put(packet)
-                    elif packet.type == protocol.URL:
-                        val = int(packet.payload)
-                        packet.payload = val+1
+                    if packet.type is protocol.URL:
+                        #visiting site
+                        logger.log(logging.INFO, "Visiting site : " + str(packet.payload.urlList))
                         self.outputQueue.put(packet)
             except:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -134,6 +133,10 @@ class WorkingNode():
 
     def crawlingThread(self):
         logger.log(logging.DEBUG, "CrawlingThread started")
+
+        while self.isActive:
+            site = urlToVisit.get(True)
+            logger.log(logging.DEBUG, "Visiting site " + site)
 
     def writeSocket(self, obj):
         serializedObj = pickle.dumps(obj)

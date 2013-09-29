@@ -28,14 +28,14 @@ class Server:
         self.clientDict = {}
         self.isActive = True
 
-    def socketSetup(self):
+    def setup(self):
         logger.log(logging.DEBUG, "Socket initialization")
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.bind((self.host, self.port))
         self.s.listen(5)
         logger.log(logging.INFO, "Listening on [" + str(self.host) + ":" + str(self.port) + "]")
 
-    def beginCrawlingProcedure(self):
+    def run(self):
         logger.log(logging.DEBUG, "Starting beginCrawlingProcedure")
         thread.start_new_thread(self.urlDispatcher, ())
         thread.start_new_thread(self.mainRoutine, ())
@@ -47,6 +47,11 @@ class Server:
             try:
                 client, address = self.s.accept()
                 thread.start_new_thread(self.connectionHandler, (client, address))
+
+                #temp testing
+                logger.log(logging.DEBUG, str(len(self.clientDict)))
+                if len(self.clientDict) == 1:
+                    self.run()
             except:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
@@ -63,7 +68,9 @@ class Server:
 
         try:
             client.sendConfig()
-            client.listen()
+            client.run()
+            while client.isActive:
+                time.sleep(1)
         except EOFError:
             pass
         except:
@@ -77,8 +84,19 @@ class Server:
     def urlDispatcher(self):
         logger.log(logging.INFO, "Starting urlDispatcher")
 
+        while self.isActive:
+            obj = urlPool.get(True)
+
+            # if not visited
+            # verification
+
+            urlToVisit.put(obj)
+
     def mainRoutine(self):
         logger.log(logging.INFO, "Starting mainRoutine")
+
+        #while self.isActive:
+        urlPool.put("http://www.lapresse.ca")
 
     def disconnectAllClient(self):
         for connectedClient in self.clientDict:
@@ -95,12 +113,46 @@ class SSClient:
         self.formattedAddr = logger.formatBrackets(str(str(address[0]) + ":" + str(address[1])))
         logger.log(logging.INFO, "Working node connected " + self.formattedAddr)
 
-    def listen(self):
+    def run(self):
+        thread.start_new_thread(self.inputThread, ())
+        thread.start_new_thread(self.outputThread, ())
+
+    def inputThread(self):
         logger.log(logging.DEBUG, "Listening for packets " + self.formattedAddr)
 
         while self.isActive:
-            self.readSocket()
-            time.sleep(1)
+            try:
+                obj = self.readSocket()
+
+                if obj.type is protocol.INFO:
+                    print("PACKET INFO")
+                    # ie : Treat end of crawl
+                    raise Exception("INFO PACKET RECEIVED")
+                elif obj.type is protocol.URL:
+                    urlPool.put(obj.payload.urlList)
+
+                time.sleep(1)
+            except EOFError:
+                self.isActive = False
+            except:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+                logger.log(logging.CRITICAL, message)
+                self.isActive = False
+
+    def outputThread(self):
+        while self.isActive:
+            try:
+                site = urlToVisit.get(True)
+                payload = protocol.URLPayload(site)
+                packet = protocol.Packet(protocol.URL, payload)
+                self.writeSocket(packet)
+                logger.log(logging.DEBUG, "Sending obj of type " + str(packet.type) + " to " + self.formattedAddr)
+            except:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+                logger.log(logging.CRITICAL, message)
+                self.isActive = False
 
     def sendConfig(self):
         logger.log(logging.DEBUG, "Sending configuration to " + self.formattedAddr)
@@ -137,12 +189,14 @@ class SSClient:
 
     def disconnect(self):
         logger.log(logging.DEBUG, "Disconnecting - Working node " + self.formattedAddr)
+        self.isActive = False
         self.socket.close()
 
 
 def handler(signum, frame):
-        print ("Exiting. ByeBye")
-        sys.exit()
+    print()
+    print ("Exiting. ByeBye")
+    sys.exit()
 
 def main():
     signal.signal(signal.SIGINT, handler)
@@ -164,7 +218,7 @@ def main():
 
     #server
     server = Server(host, port)
-    server.socketSetup()
+    server.setup()
     #server.listen()
     thread.start_new_thread(server.listen, ()) #testing
 

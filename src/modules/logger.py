@@ -61,6 +61,7 @@ def printAsciiLogo():
     print("                                      (o o)                                     ")
     print("                                 -ooO--(_)--Ooo-                                ")
     print("                                      v1.0a                                     ")
+    print("                                 David Albertson                                ")
     print("")
 
 
