@@ -15,9 +15,13 @@ import modules.protocol as protocol
 
 buffSize = 4096
 
+#Payload
 urlVisited = {} # url already visited
 urlPool = Queue.Queue(0) # url pool arriving from working nodes
-urlToVisit = Queue.Queue(0) # url to be visited by working nodes
+
+outputQueue = Queue.Queue(0)
+
+serverRunning = False
 
 
 class Server:
@@ -29,6 +33,7 @@ class Server:
         self.isActive = True
 
     def setup(self):
+        """Basic setup operation (socket binding, listen, etc)"""
         logger.log(logging.DEBUG, "Socket initialization")
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.bind((self.host, self.port))
@@ -36,11 +41,13 @@ class Server:
         logger.log(logging.INFO, "Listening on [" + str(self.host) + ":" + str(self.port) + "]")
 
     def run(self):
+        """Launches the urlDispatcher and mainRoutine threads"""
         logger.log(logging.DEBUG, "Starting beginCrawlingProcedure")
         thread.start_new_thread(self.urlDispatcher, ())
         thread.start_new_thread(self.mainRoutine, ())
 
     def listen(self):
+        """Waits for new clients to connect and launches the thread accordingly"""
         print("- - - - - - - - - - - - - - -")
         logger.log(logging.INFO, "Waiting for working nodes to connect...")
         while self.isActive:
@@ -54,13 +61,16 @@ class Server:
                 self.isActive = False
 
     def connectionHandler(self, socket, address):
+        """Creates a server-side client object and makes it listen for inputs"""
         clientID = uuid.uuid4()
         client = SSClient(clientID, socket, address)
         self.clientDict[clientID] = client
 
-        #temp testing
-        if len(self.clientDict) > 0:
+        global serverRunning
+        #temp testing, could take a parameter from config
+        if len(self.clientDict) > 0  and serverRunning == False:
             self.run()
+            serverRunning = True
 
         for clients in self.clientDict:
             logger.log(logging.DEBUG, "Working node connected : " + str(self.clientDict[clients].id))
@@ -69,10 +79,11 @@ class Server:
             client.sendConfig()
             client.run()
             while client.isActive:
-                time.sleep(1)
+                time.sleep(0.3)
         except EOFError:
             pass
         except:
+            client.isActive = False
             exc_type, exc_value, exc_traceback = sys.exc_info()
             message = "\n" + ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
             logger.log(logging.ERROR, message)
@@ -81,7 +92,8 @@ class Server:
             del self.clientDict[clientID]
 
     def urlDispatcher(self):
-        logger.log(logging.INFO, "Starting urlDispatcher")
+        """Reads from the url pool, makes sure the url has not been visited and adds it to the urlToVisitQueue"""
+        logger.log(logging.INFO, "Starting server urlDispatcher")
 
         while self.isActive:
             obj = urlPool.get(True)
@@ -89,16 +101,20 @@ class Server:
             # if not visited
             # verification
 
-            urlToVisit.put(obj)
+            #urlToVisit.put(obj)
 
     def mainRoutine(self):
-        logger.log(logging.INFO, "Starting mainRoutine")
-
+        """To Come in da future. For now, no use"""
+        logger.log(logging.INFO, "Starting server mainRoutine")
         while self.isActive:
-            urlPool.put("http://www.lapresse.ca" + str(datetime.datetime.now()))
+            payload = protocol.URLPayload([str("http://www.lapresse.ca" + str(datetime.datetime.now())), str("http://www.lapresse.ca" + str(datetime.datetime.now()))])
+            packet = protocol.Packet(protocol.URL, payload)
+            outputQueue.put(packet)
+
             time.sleep(2)
 
     def disconnectAllClient(self):
+        """Disconnects all clients"""
         for connectedClient in self.clientDict:
             self.clientDict[connectedClient].disconnect()
             logger.log(logging.DEBUG, "Disconnected : " + str(self.clientDict[connectedClient].id))
@@ -112,49 +128,10 @@ class SSClient:
         self.isActive = True
         self.formattedAddr = logger.formatBrackets(str(str(address[0]) + ":" + str(address[1])))
         logger.log(logging.INFO, "Working node connected " + self.formattedAddr)
-
-    def run(self):
-        thread.start_new_thread(self.inputThread, ())
-        thread.start_new_thread(self.outputThread, ())
-
-    def inputThread(self):
-        logger.log(logging.DEBUG, "Listening for packets " + self.formattedAddr)
-
-        while self.isActive:
-            try:
-                obj = self.readSocket()
-
-                if obj.type is protocol.INFO:
-                    print("PACKET INFO")
-                    # ie : Treat end of crawl
-                    raise Exception("INFO PACKET RECEIVED")
-                elif obj.type is protocol.URL:
-                    urlPool.put(obj.payload.urlList)
-
-                time.sleep(1)
-            except EOFError:
-                self.isActive = False
-            except:
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
-                logger.log(logging.CRITICAL, message)
-                self.isActive = False
-
-    def outputThread(self):
-        while self.isActive:
-            try:
-                site = urlToVisit.get(True)
-                payload = protocol.URLPayload(site)
-                packet = protocol.Packet(protocol.URL, payload)
-                self.writeSocket(packet)
-                logger.log(logging.DEBUG, "Sending obj of type " + str(packet.type) + " to " + self.formattedAddr)
-            except:
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
-                logger.log(logging.CRITICAL, message)
-                self.isActive = False
+        self.sentCount = 0
 
     def sendConfig(self):
+        """Sends the configuration to the client"""
         logger.log(logging.DEBUG, "Sending configuration to " + self.formattedAddr)
 
         payload = protocol.ConfigurationPayload(protocol.ConfigurationPayload.DYNAMIC_CRAWLING)
@@ -172,13 +149,61 @@ class SSClient:
                 self.isActive = False
                 raise Exception("Unable to transmit configuration")
 
+    def run(self):
+        """Launched the input and output thread with the client itself"""
+        thread.start_new_thread(self.inputThread, ())
+        thread.start_new_thread(self.outputThread, ())
+
+    def inputThread(self):
+        """Listens for inputs from the client"""
+        logger.log(logging.DEBUG, "Listening for packets " + self.formattedAddr)
+
+        while self.isActive:
+            try:
+                deserializedPacket = self.readSocket()
+                self.sentCount = self.sentCount-1
+                self.dispatcher(deserializedPacket)
+
+            except EOFError:
+                #Fixes the pickle error if clients disconnects
+                self.isActive = False
+
+    def outputThread(self):
+        """Checks if there are messages to send to the client and sends them"""
+        while self.isActive:
+            if self.sentCount > 5:
+                time.sleep(0.1)
+                continue
+            packetToBroadCast = protocol.deQueue([outputQueue])
+
+            if not packetToBroadCast:
+                    continue
+
+            for packet in packetToBroadCast:
+                self.writeSocket(packet)
+                self.sentCount = self.sentCount+1
+                logger.log(logging.DEBUG, "Packet of type " + str(packet.type) + " sent to " + self.formattedAddr)
+
+    def dispatcher(self, packet):
+        """Dispatches packets to the right packet queue"""
+        if packet.type is protocol.INFO:
+            print("temp")
+        elif packet.type is protocol.URL:
+            #urlPool.put(packet)
+            print("temp")
+        else:
+            logger.log(logging.CRITICAL, "Unrecognized packet type : " + str(packet.type) + ". This packet was dropped")
+            return
+
+        logger.log(logging.DEBUG, "Dispatched packet of type: " + str(packet.type))
+
     def writeSocket(self, obj):
         try:
-            logger.log(logging.DEBUG, "Write " + self.formattedAddr)
+            logger.log(logging.DEBUG, "Writing to " + self.formattedAddr)
             serializedObj = pickle.dumps(obj)
             self.socket.send(serializedObj)
         except:
-            raise Exception("Error writting")
+            raise Exception("Unable to write to socket (client disconnected)")
 
     def readSocket(self, timeOut=None):
         self.socket.settimeout(timeOut)
@@ -192,6 +217,7 @@ class SSClient:
         return pickle.loads(data)
 
     def disconnect(self):
+        """Disconnects the client"""
         logger.log(logging.DEBUG, "Disconnecting - Working node " + self.formattedAddr)
         self.isActive = False
         self.socket.close()
@@ -223,15 +249,12 @@ def main():
     #server
     server = Server(host, port)
     server.setup()
-    #server.listen()
     thread.start_new_thread(server.listen, ()) #testing
 
     while server.isActive:
         time.sleep(0.5)
 
-    #time.sleep(9) #testing
-    #server.isActive = False
-    #server.disconnectAllClient()
+    server.disconnectAllClient()
     logger.log(logging.INFO, "Exiting. ByeBye")
 
 

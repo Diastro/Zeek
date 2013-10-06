@@ -31,7 +31,9 @@ class InfoPayload():
 
 class URLPayload():
     def __init__(self, urlList):
-        self.urlList = urlList
+        self.urlList = []
+        for url in urlList:
+            self.urlList.append(url)
 
 
 def deQueue(queueArray):
