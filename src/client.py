@@ -10,6 +10,7 @@ import thread
 import traceback
 import modules.logger as logger
 import modules.protocol as protocol
+import modules.scrapping as scrapping
 
 buffSize = 4096
 
@@ -54,7 +55,7 @@ class WorkingNode():
         if self.isActive:
             try:
                 deserializedPacket = self.readSocket()
-                if deserializedPacket.type is protocol.CONFIG:
+                if deserializedPacket.type == protocol.CONFIG:
                     self.crawlingType = deserializedPacket.payload.crawlingType
                     payload = protocol.InfoPayload(protocol.InfoPayload.CLIENT_ACK)
                     packet = protocol.Packet(protocol.INFO, payload)
@@ -109,7 +110,7 @@ class WorkingNode():
                 self.isActive = False
 
     def interpretingThread(self):
-        """Interprets message from the server (other than type URL)"""
+        """Interprets message from the server other than type URL. (ie: INFO)"""
         logger.log(logging.DEBUG, "InterpretingThread started")
 
         while self.isActive:
@@ -121,7 +122,7 @@ class WorkingNode():
                     continue
 
                 for packet in packets:
-                    if packet.type is protocol.INFO:
+                    if packet.type == protocol.INFO:
                         #visiting site
                         logger.log(logging.INFO, "Interpreting INFO packet : " + str(packet.payload.urlList))
             except:
@@ -136,17 +137,22 @@ class WorkingNode():
 
         while self.isActive:
             try:
-                time.sleep(0.01) #temp - For testing
-                url = protocol.deQueue([self.urlToVisit])
+                urlList = protocol.deQueue([self.urlToVisit])
 
-                if not url:
+                if not urlList:
+                    time.sleep(0.2) #temp - For testing
                     continue
 
-                logger.log(logging.INFO, "Visiting site : " + str(url))
+                for url in urlList:
+                    session = scrapping.visit(url)
+                    logger.log(logging.DEBUG, "Session \n" + str(session.url) +
+                                              "\nCode : " + str(session.returnCode) +
+                                              "\nRequest time : " + str(session.requestTime) +
+                                              "\nBs time : " + str(session.bsParsingTime))
 
-                payload = protocol.URLPayload([url])
-                packet = protocol.Packet(protocol.URL, payload)
-                self.outputQueue.put(packet)
+                    payload = protocol.URLPayload([url])
+                    packet = protocol.Packet(protocol.URL, payload)
+                    self.outputQueue.put(packet)
 
             except:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -156,11 +162,12 @@ class WorkingNode():
 
     def dispatcher(self, packet):
         """Dispatches packets to the right packet queue"""
-        if packet.type is protocol.INFO:
+        if packet.type == protocol.INFO:
+            logger.log(logging.DEBUG, "Dispatching INFO packet")
             self.infoQueue.put(packet)
-        elif packet.type is protocol.URL:
+        elif packet.type == protocol.URL:
+            logger.log(logging.DEBUG, "Dispatching url packet : " + str(packet.payload.urlList[0]))
             for site in packet.payload.urlList:
-                logger.log(logging.INFO, "HERE" + site)
                 self.urlToVisit.put(site)
         else:
             logger.log(logging.CRITICAL, "Unrecognized packet type : " + str(packet.type) + ". This packet was dropped")

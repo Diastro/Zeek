@@ -15,12 +15,14 @@ import modules.protocol as protocol
 
 buffSize = 4096
 
-#Payload
+# url strings
 urlVisited = {} # url already visited
-urlPool = Queue.Queue(0) # url pool arriving from working nodes
+urlPool = Queue.Queue(0) # url visited by working nodes
 
+# packet with payload
 outputQueue = Queue.Queue(0)
 
+# temporary for server.run()
 serverRunning = False
 
 
@@ -47,7 +49,7 @@ class Server:
         thread.start_new_thread(self.mainRoutine, ())
 
     def listen(self):
-        """Waits for new clients to connect and launches the thread accordingly"""
+        """Waits for new clients to connect and launches a new client thread accordingly"""
         print("- - - - - - - - - - - - - - -")
         logger.log(logging.INFO, "Waiting for working nodes to connect...")
         while self.isActive:
@@ -107,11 +109,13 @@ class Server:
         """To Come in da future. For now, no use"""
         logger.log(logging.INFO, "Starting server mainRoutine")
         while self.isActive:
-            payload = protocol.URLPayload([str("http://www.lapresse.ca" + str(datetime.datetime.now())), str("http://www.lapresse.ca" + str(datetime.datetime.now()))])
+            #payload = protocol.URLPayload([str("http://www.lapresse.ca" + str(datetime.datetime.now())), str("http://www.lapresse.ca" + str(datetime.datetime.now()))])
+            payload = protocol.URLPayload([str("http://step.polymtl.ca")])
             packet = protocol.Packet(protocol.URL, payload)
             outputQueue.put(packet)
 
-            time.sleep(2)
+            time.sleep(0.2)
+            #time.sleep(2)
 
     def disconnectAllClient(self):
         """Disconnects all clients"""
@@ -185,17 +189,17 @@ class SSClient:
                 logger.log(logging.DEBUG, "Packet of type " + str(packet.type) + " sent to " + self.formattedAddr)
 
     def dispatcher(self, packet):
-        """Dispatches packets to the right packet queue"""
-        if packet.type is protocol.INFO:
-            print("temp")
-        elif packet.type is protocol.URL:
+        """Dispatches packets to the right packet queue or takes action if needed (ie: infoPacket)"""
+        logger.log(logging.DEBUG, "Dispatching packet of type: " + str(packet.type))
+
+        if packet.type == protocol.INFO:
+            logger.log(logging.DEBUG, "Website received INFO packet from node " + self.formattedAddr)
+        elif packet.type == protocol.URL:
             #urlPool.put(packet)
-            print("temp")
+            logger.log(logging.DEBUG, "Website visited " + str(packet.payload.urlList[0]) + " from node " + self.formattedAddr)
         else:
             logger.log(logging.CRITICAL, "Unrecognized packet type : " + str(packet.type) + ". This packet was dropped")
             return
-
-        logger.log(logging.DEBUG, "Dispatched packet of type: " + str(packet.type))
 
     def writeSocket(self, obj):
         try:

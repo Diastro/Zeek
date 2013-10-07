@@ -7,7 +7,6 @@ debugFlag = True
 
 def init(path, logName):
     if not os.path.exists(path):
-        print path
         os.makedirs(path)
     logging.basicConfig(filename=path+logName, format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG)
 
@@ -24,7 +23,7 @@ def log(level, message):
     #message formatting
     if level == logging.DEBUG:
         func = inspect.currentframe().f_back.f_code
-        fileName = func.co_filename
+        fileName = ''.join(func.co_filename.split('/')[-1])
         line = func.co_firstlineno
         message = "[" + str(func.co_name) + " - " + str(fileName) + ", " + str(line) + "] " + message
 

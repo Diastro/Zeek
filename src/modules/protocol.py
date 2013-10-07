@@ -1,8 +1,8 @@
 import Queue
 
-CONFIG = 0
-INFO = 1
-URL = 2
+CONFIG = 'CONFIG'
+INFO = 'INFO'
+URL = 'URL'
 
 
 class Packet:
