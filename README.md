@@ -23,6 +23,10 @@ pyhton server.py
 ~~~ sh
 pyhton client.py
 ~~~
+
+####Third party library
+- [BeautifulSoup4](http://www.crummy.com/software/BeautifulSoup/)
+- [lxml](http://lxml.de/)
     
 ##References
 ### WebCrawling / WebScraping
