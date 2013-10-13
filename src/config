@@ -1,6 +1,6 @@
 [server]
-#listeningAddr = 127.0.0.1
-listeningAddr = 132.207.114.185
+listeningAddr = 127.0.0.1
+#listeningAddr = 132.207.114.185
 listeningPort = 5050
 
 [client]
@@ -9,5 +9,5 @@ hostAddr = 127.0.0.1
 hostPort = 5050
 
 [common]
-verbose = True
+verbose =False
 logPath = logs/

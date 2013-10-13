@@ -30,8 +30,15 @@ class InfoPayload():
 
 
 class URLPayload():
-    def __init__(self, urlList):
+    VISITED = 'VISITED'
+    SKIPPED = 'SKIPPED'
+    TOVISIT = 'TOVISIT'
+    SCRAPPED = 'SCRAPPED'
+
+    def __init__(self, urlList, type):
         self.urlList = []
+        self.type = type
+
         for url in urlList:
             self.urlList.append(url)
 

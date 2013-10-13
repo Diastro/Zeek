@@ -13,11 +13,16 @@ import uuid
 import modules.logger as logger
 import modules.protocol as protocol
 
-buffSize = 4096
+buffSize = 524288
 
 # url strings
-urlVisited = {} # url already visited
-urlPool = Queue.Queue(0) # url visited by working nodes
+urlVisited = dict() # url already visited
+urlPool = Queue.Queue(0) # url scrapped by working nodes
+
+# url strings  - stats
+scrappedURLlist = []
+visitedURLlist = []
+skippedURLlist = []
 
 # packet with payload
 outputQueue = Queue.Queue(0)
@@ -100,6 +105,9 @@ class Server:
         while self.isActive:
             obj = urlPool.get(True)
 
+            payload = protocol.URLPayload([str(obj)], protocol.URLPayload.TOVISIT)
+            packet = protocol.Packet(protocol.URL, payload)
+            outputQueue.put(packet)
             # if not visited
             # verification
 
@@ -108,12 +116,12 @@ class Server:
     def mainRoutine(self):
         """To Come in da future. For now, no use"""
         logger.log(logging.INFO, "Starting server mainRoutine")
-        while self.isActive:
-            #payload = protocol.URLPayload([str("http://www.lapresse.ca" + str(datetime.datetime.now())), str("http://www.lapresse.ca" + str(datetime.datetime.now()))])
-            payload = protocol.URLPayload([str("http://step.polymtl.ca")])
-            packet = protocol.Packet(protocol.URL, payload)
-            outputQueue.put(packet)
+        payload = protocol.URLPayload([str("http://www.lapresse.ca")], protocol.URLPayload.TOVISIT)
+        packet = protocol.Packet(protocol.URL, payload)
+        outputQueue.put(packet)
+        urlVisited["http://www.lapresse.ca"] = True
 
+        while self.isActive:
             time.sleep(0.2)
             #time.sleep(2)
 
@@ -195,8 +203,25 @@ class SSClient:
         if packet.type == protocol.INFO:
             logger.log(logging.DEBUG, "Website received INFO packet from node " + self.formattedAddr)
         elif packet.type == protocol.URL:
-            #urlPool.put(packet)
-            logger.log(logging.DEBUG, "Website visited " + str(packet.payload.urlList[0]) + " from node " + self.formattedAddr)
+
+            if packet.payload.type == protocol.URLPayload.SCRAPPED:
+                logger.log(logging.INFO, "Received " + str(len(packet.payload.urlList)) + " / " + str(len(scrappedURLlist)) + " - " + str(len(skippedURLlist)) + " from node " + self.formattedAddr)
+                for url in packet.payload.urlList:
+                    if url not in urlVisited:
+                        urlVisited[url] = True
+                        urlPool.put(url)
+                        scrappedURLlist.append(url)
+
+            if packet.payload.type == protocol.URLPayload.VISITED:
+                for url in packet.payload.urlList:
+                    logger.log(logging.DEBUG, "Visited " + url + " from node " + self.formattedAddr)
+                    visitedURLlist.append(url)
+
+            if packet.payload.type == protocol.URLPayload.SKIPPED:
+                for url in packet.payload.urlList:
+                    logger.log(logging.DEBUG, "Skipped " + url + " from node " + self.formattedAddr)
+                    skippedURLlist.append(url)
+
         else:
             logger.log(logging.CRITICAL, "Unrecognized packet type : " + str(packet.type) + ". This packet was dropped")
             return
@@ -228,8 +253,24 @@ class SSClient:
 
 
 def handler(signum, frame):
-    print()
-    print ("Exiting. ByeBye")
+    try:
+        scrapped = len(scrappedURLlist)
+        skipped = len(skippedURLlist)
+        visited = len(visitedURLlist)
+
+        for url in visitedURLlist:
+            print("Visited : " + url)
+
+        print("\n\n-------------------------")
+        print("Scrapped : " + str(scrapped))
+        print("Skipped : " + str(skipped))
+        print("Visited : " + str(visited))
+        print("-------------------------")
+        print(float(visited/skipped))
+    except:
+        pass
+
+    print("\n\nExiting. ByeBye")
     sys.exit()
 
 def main():

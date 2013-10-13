@@ -12,7 +12,7 @@ import modules.logger as logger
 import modules.protocol as protocol
 import modules.scrapping as scrapping
 
-buffSize = 4096
+buffSize = 524288
 
 
 class WorkingNode():
@@ -100,7 +100,7 @@ class WorkingNode():
 
         while self.isActive:
             try:
-                obj = self.outputQueue.get(True)
+                obj = self.outputQueue.get(True) #fix with helper method to prevent block
                 self.writeSocket(obj)
                 logger.log(logging.DEBUG, "Sending obj of type " + str(obj.type))
             except:
@@ -144,15 +144,26 @@ class WorkingNode():
                     continue
 
                 for url in urlList:
-                    session = scrapping.visit(url)
-                    logger.log(logging.DEBUG, "Session \n" + str(session.url) +
-                                              "\nCode : " + str(session.returnCode) +
-                                              "\nRequest time : " + str(session.requestTime) +
-                                              "\nBs time : " + str(session.bsParsingTime))
+                    try:
+                        session = scrapping.visit(url)
+                        logger.log(logging.DEBUG, "Session \n" + str(session.url) +
+                          "\nCode : " + str(session.returnCode) +
+                          "\nRequest time : " + str(session.requestTime) +
+                          "\nBs time : " + str(session.bsParsingTime))
 
-                    payload = protocol.URLPayload([url])
-                    packet = protocol.Packet(protocol.URL, payload)
-                    self.outputQueue.put(packet)
+                        payload = protocol.URLPayload(session.scrappedURLs, protocol.URLPayload.SCRAPPED)
+                        packet = protocol.Packet(protocol.URL, payload)
+                        self.outputQueue.put(packet)
+
+                        payload = protocol.URLPayload([url], protocol.URLPayload.VISITED)
+                        packet = protocol.Packet(protocol.URL, payload)
+                        self.outputQueue.put(packet)
+                    except:
+                        logger.log(logging.INFO, "Skipping URL : " + url)
+                        payload = protocol.URLPayload([url], protocol.URLPayload.SKIPPED)
+                        packet = protocol.Packet(protocol.URL, payload)
+                        self.outputQueue.put(packet)
+                        continue
 
             except:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
