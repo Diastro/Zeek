@@ -72,6 +72,7 @@ class WorkingNode():
 
     def run(self):
         """Lunches main threads"""
+        logger.log(logging.INFO, "Starting Crawling/Scrapping sequence...")
         if self.isActive:
             thread.start_new_thread(self.outputThread, ())
             thread.start_new_thread(self.inputThread, ())
@@ -123,7 +124,6 @@ class WorkingNode():
 
                 for packet in packets:
                     if packet.type == protocol.INFO:
-                        #visiting site
                         logger.log(logging.INFO, "Interpreting INFO packet : " + str(packet.payload.urlList))
             except:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -159,6 +159,10 @@ class WorkingNode():
                         packet = protocol.Packet(protocol.URL, payload)
                         self.outputQueue.put(packet)
                     except:
+                        exc_type, exc_value, exc_traceback = sys.exc_info()
+                        message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+                        logger.log(logging.CRITICAL, message)
+
                         logger.log(logging.INFO, "Skipping URL : " + url)
                         payload = protocol.URLPayload([url], protocol.URLPayload.SKIPPED)
                         packet = protocol.Packet(protocol.URL, payload)
@@ -196,12 +200,24 @@ class WorkingNode():
 
     def readSocket(self, timeOut=None):
         self.s.settimeout(timeOut)
-        data = self.s.recv(buffSize)
+        data = ""
 
-        #broken connection
-        if not data:
-            logger.log(logging.INFO, "Lost connection to server " + self.masterNodeFormattedAddr)
-            self.isActive = False
+        while self.isActive:
+            data = data + self.s.recv(buffSize)
+
+            #broken connection
+            if not data:
+                logger.log(logging.INFO, "Lost connection to server " + self.masterNodeFormattedAddr)
+                self.isActive = False
+
+            try:
+                pickle.loads(data)
+            except:
+                continue
+            break
+
+        if self.isActive == False:
+            return
 
         return pickle.loads(data)
 

@@ -3,7 +3,12 @@ import logging
 import os
 
 debugFlag = True
-
+GREEN = '\033[92m'
+PINK = '\033[95m'
+BLUE = '\033[94m'
+RED = '\033[91m'
+YELLOW = '\033[93m'
+NOCOLOR = '\033[0m'
 
 def init(path, logName):
     if not os.path.exists(path):
@@ -21,6 +26,7 @@ def debugFlag(flag):
 
 def log(level, message):
     #message formatting
+
     if level == logging.DEBUG:
         func = inspect.currentframe().f_back.f_code
         fileName = ''.join(func.co_filename.split('/')[-1])

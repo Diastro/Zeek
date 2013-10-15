@@ -15,16 +15,17 @@ import modules.protocol as protocol
 
 buffSize = 524288
 
-# url strings
+# (string:url) - Crawling algo
 urlVisited = dict() # url already visited
 urlPool = Queue.Queue(0) # url scrapped by working nodes
+urlToVisit = Queue.Queue(0) # url scrapped by working nodes
 
-# url strings  - stats
+# (string:url) - For stats
 scrappedURLlist = []
 visitedURLlist = []
 skippedURLlist = []
 
-# packet with payload
+# (packet+payload) - To be sent to _any_ node
 outputQueue = Queue.Queue(0)
 
 # temporary for server.run()
@@ -73,8 +74,8 @@ class Server:
         client = SSClient(clientID, socket, address)
         self.clientDict[clientID] = client
 
-        global serverRunning
         #temp testing, could take a parameter from config
+        global serverRunning
         if len(self.clientDict) > 0  and serverRunning == False:
             self.run()
             serverRunning = True
@@ -99,31 +100,42 @@ class Server:
             del self.clientDict[clientID]
 
     def urlDispatcher(self):
-        """Reads from the url pool, makes sure the url has not been visited and adds it to the urlToVisitQueue"""
+        """Reads from the urlPool, makes sure the url has not been visited and adds it to the urlToVisit Queue"""
         logger.log(logging.INFO, "Starting server urlDispatcher")
 
         while self.isActive:
-            obj = urlPool.get(True)
+            url = urlPool.get(True)
 
-            payload = protocol.URLPayload([str(obj)], protocol.URLPayload.TOVISIT)
-            packet = protocol.Packet(protocol.URL, payload)
-            outputQueue.put(packet)
-            # if not visited
-            # verification
-
-            #urlToVisit.put(obj)
+            if url not in urlVisited:
+                urlVisited[url] = True
+                #logic if static crawling will come here
+                urlToVisit.put(url)
+                scrappedURLlist.append(url)
 
     def mainRoutine(self):
         """To Come in da future. For now, no use"""
         logger.log(logging.INFO, "Starting server mainRoutine")
+        payload = protocol.URLPayload([str("http://www.businessinsider.com")], protocol.URLPayload.TOVISIT)
+        packet = protocol.Packet(protocol.URL, payload)
+        outputQueue.put(packet)
+
         payload = protocol.URLPayload([str("http://www.lapresse.ca")], protocol.URLPayload.TOVISIT)
         packet = protocol.Packet(protocol.URL, payload)
         outputQueue.put(packet)
+
+        payload = protocol.URLPayload([str("http://www.reddit.com")], protocol.URLPayload.TOVISIT)
+        packet = protocol.Packet(protocol.URL, payload)
+        outputQueue.put(packet)
+
+        urlVisited["http://www.businessinsider.com"] = True
         urlVisited["http://www.lapresse.ca"] = True
+        urlVisited["http://www.reddit.com"] = True
 
         while self.isActive:
-            time.sleep(0.2)
-            #time.sleep(2)
+            url = urlToVisit.get(True)
+            payload = protocol.URLPayload([str(url)], protocol.URLPayload.TOVISIT)
+            packet = protocol.Packet(protocol.URL, payload)
+            outputQueue.put(packet)
 
     def disconnectAllClient(self):
         """Disconnects all clients"""
@@ -139,7 +151,7 @@ class SSClient:
         self.address = address
         self.isActive = True
         self.formattedAddr = logger.formatBrackets(str(str(address[0]) + ":" + str(address[1])))
-        logger.log(logging.INFO, "Working node connected " + self.formattedAddr)
+        logger.log(logging.INFO, logger.GREEN + "Working node connected " + self.formattedAddr + logger.NOCOLOR)
         self.sentCount = 0
 
     def sendConfig(self):
@@ -198,6 +210,8 @@ class SSClient:
 
     def dispatcher(self, packet):
         """Dispatches packets to the right packet queue or takes action if needed (ie: infoPacket)"""
+        if packet is None:
+            return
         logger.log(logging.DEBUG, "Dispatching packet of type: " + str(packet.type))
 
         if packet.type == protocol.INFO:
@@ -207,10 +221,7 @@ class SSClient:
             if packet.payload.type == protocol.URLPayload.SCRAPPED:
                 logger.log(logging.INFO, "Received " + str(len(packet.payload.urlList)) + " / " + str(len(scrappedURLlist)) + " - " + str(len(skippedURLlist)) + " from node " + self.formattedAddr)
                 for url in packet.payload.urlList:
-                    if url not in urlVisited:
-                        urlVisited[url] = True
-                        urlPool.put(url)
-                        scrappedURLlist.append(url)
+                    urlPool.put(url)
 
             if packet.payload.type == protocol.URLPayload.VISITED:
                 for url in packet.payload.urlList:
@@ -236,12 +247,24 @@ class SSClient:
 
     def readSocket(self, timeOut=None):
         self.socket.settimeout(timeOut)
-        data = self.socket.recv(buffSize)
+        data = ""
 
-        #broken connection
-        if not data:
-            logger.log(logging.INFO, "Lost connection - Working node " + self.formattedAddr)
-            self.isActive = False
+        while self.isActive:
+            data = data + self.socket.recv(buffSize)
+
+            #broken connection
+            if not data:
+                logger.log(logging.INFO, logger.RED + "Lost connection - Working node " + self.formattedAddr + logger.NOCOLOR)
+                self.isActive = False
+
+            try:
+                pickle.loads(data)
+            except:
+                continue
+            break
+
+        if self.isActive == False:
+            return
 
         return pickle.loads(data)
 
@@ -258,8 +281,12 @@ def handler(signum, frame):
         skipped = len(skippedURLlist)
         visited = len(visitedURLlist)
 
+        #temp for testing
         for url in visitedURLlist:
-            print("Visited : " + url)
+            logger.log(logging.DEBUG, "Visited : " + url)
+
+        for url in scrappedURLlist:
+            logger.log(logging.DEBUG, "Scrapped : " + url)
 
         print("\n\n-------------------------")
         print("Scrapped : " + str(scrapped))
@@ -268,6 +295,7 @@ def handler(signum, frame):
         print("-------------------------")
         print(float(visited/skipped))
     except:
+        #handles cases where crawling did occur (list were empty)
         pass
 
     print("\n\nExiting. ByeBye")

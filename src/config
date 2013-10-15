@@ -9,5 +9,5 @@ hostAddr = 127.0.0.1
 hostPort = 5050
 
 [common]
-verbose =False
+verbose = False
 logPath = logs/
