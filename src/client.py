@@ -194,7 +194,7 @@ class WorkingNode():
         try:
             logger.log(logging.DEBUG, "Writing to server")
             serializedObj = pickle.dumps(obj)
-            self.s.send(serializedObj)
+            self.s.sendall(serializedObj)
         except:
             raise Exception("Unable to write to socket (lost connection to server)")
 

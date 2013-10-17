@@ -44,6 +44,7 @@ class Server:
         """Basic setup operation (socket binding, listen, etc)"""
         logger.log(logging.DEBUG, "Socket initialization")
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.s.bind((self.host, self.port))
         self.s.listen(5)
         logger.log(logging.INFO, "Listening on [" + str(self.host) + ":" + str(self.port) + "]")
@@ -241,7 +242,7 @@ class SSClient:
         try:
             logger.log(logging.DEBUG, "Writing to " + self.formattedAddr)
             serializedObj = pickle.dumps(obj)
-            self.socket.send(serializedObj)
+            self.socket.sendall(serializedObj)
         except:
             raise Exception("Unable to write to socket (client disconnected)")
 
