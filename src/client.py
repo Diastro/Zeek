@@ -27,6 +27,8 @@ class WorkingNode():
         self.infoQueue = Queue.Queue(0)
         self.urlToVisit = Queue.Queue(0)
 
+        self.data = ""
+
     def connect(self, host, port):
         """Sets up the connection to the server (max 3 attemps)"""
         self.host = host
@@ -192,34 +194,34 @@ class WorkingNode():
 
     def writeSocket(self, obj):
         try:
-            logger.log(logging.DEBUG, "Writing to server")
+            #logger.log(logging.DEBUG, "Writing to server")
             serializedObj = pickle.dumps(obj)
-            self.s.sendall(serializedObj)
+            self.s.sendall(serializedObj + '\n\n12345ZEEK6789\n')
+            logger.log(logging.DEBUG, "Writing to server " + str(len(serializedObj + '\n\n12345ZEEK6789\n')))
         except:
             raise Exception("Unable to write to socket (lost connection to server)")
 
     def readSocket(self, timeOut=None):
         self.s.settimeout(timeOut)
-        data = ""
+        data = self.data
 
         while self.isActive:
-            data = data + self.s.recv(buffSize)
+            buffer = self.s.recv(buffSize)
+            data = data + buffer
 
-            #broken connection
-            if not data:
+            if not buffer:
                 logger.log(logging.INFO, "Lost connection to server " + self.masterNodeFormattedAddr)
                 self.isActive = False
 
-            try:
-                pickle.loads(data)
-            except:
-                continue
-            break
+            if "\n\n12345ZEEK6789\n" in data:
+                data = data.split("\n\n12345ZEEK6789\n")
+                self.data = "\n\n12345ZEEK6789\n".join(data[1:])
+                break
 
         if self.isActive == False:
             return
 
-        return pickle.loads(data)
+        return pickle.loads(data[0])
 
     def disconnect(self):
         """Disconnects from the server"""

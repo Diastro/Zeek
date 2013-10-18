@@ -26,7 +26,7 @@ visitedURLlist = []
 skippedURLlist = []
 
 # (packet+payload) - To be sent to _any_ node
-outputQueue = Queue.Queue(0)
+outputQueue = Queue.Queue(200)
 
 # temporary for server.run()
 serverRunning = False
@@ -133,10 +133,15 @@ class Server:
         urlVisited["http://www.reddit.com"] = True
 
         while self.isActive:
-            url = urlToVisit.get(True)
-            payload = protocol.URLPayload([str(url)], protocol.URLPayload.TOVISIT)
-            packet = protocol.Packet(protocol.URL, payload)
-            outputQueue.put(packet)
+            try:
+                url = urlToVisit.get(True)
+                payload = protocol.URLPayload([str(url)], protocol.URLPayload.TOVISIT)
+                packet = protocol.Packet(protocol.URL, payload)
+                outputQueue.put(packet)
+            except:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                message = "\n" + ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+                logger.log(logging.ERROR, message)
 
     def disconnectAllClient(self):
         """Disconnects all clients"""
@@ -152,8 +157,10 @@ class SSClient:
         self.address = address
         self.isActive = True
         self.formattedAddr = logger.formatBrackets(str(str(address[0]) + ":" + str(address[1])))
-        logger.log(logging.INFO, logger.GREEN + "Working node connected " + self.formattedAddr + logger.NOCOLOR)
         self.sentCount = 0
+        self.data = ""
+
+        logger.log(logging.INFO, logger.GREEN + "Working node connected " + self.formattedAddr + logger.NOCOLOR)
 
     def sendConfig(self):
         """Sends the configuration to the client"""
@@ -186,7 +193,6 @@ class SSClient:
         while self.isActive:
             try:
                 deserializedPacket = self.readSocket()
-                self.sentCount = self.sentCount-1
                 self.dispatcher(deserializedPacket)
 
             except EOFError:
@@ -225,11 +231,13 @@ class SSClient:
                     urlPool.put(url)
 
             if packet.payload.type == protocol.URLPayload.VISITED:
+                self.sentCount = self.sentCount-1
                 for url in packet.payload.urlList:
                     logger.log(logging.DEBUG, "Visited " + url + " from node " + self.formattedAddr)
                     visitedURLlist.append(url)
 
             if packet.payload.type == protocol.URLPayload.SKIPPED:
+                self.sentCount = self.sentCount-1
                 for url in packet.payload.urlList:
                     logger.log(logging.DEBUG, "Skipped " + url + " from node " + self.formattedAddr)
                     skippedURLlist.append(url)
@@ -242,32 +250,34 @@ class SSClient:
         try:
             logger.log(logging.DEBUG, "Writing to " + self.formattedAddr)
             serializedObj = pickle.dumps(obj)
-            self.socket.sendall(serializedObj)
+            self.socket.sendall(serializedObj + '\n\n12345ZEEK6789\n')
         except:
             raise Exception("Unable to write to socket (client disconnected)")
 
     def readSocket(self, timeOut=None):
         self.socket.settimeout(timeOut)
-        data = ""
+        data = self.data
 
         while self.isActive:
-            data = data + self.socket.recv(buffSize)
+            buffer = self.socket.recv(buffSize)
+            data = data + buffer
 
-            #broken connection
-            if not data:
-                logger.log(logging.INFO, logger.RED + "Lost connection - Working node " + self.formattedAddr + logger.NOCOLOR)
+            logger.log(logging.DEBUG, "Buffer " + str(len(buffer)) + " " + self.formattedAddr)
+
+            if not buffer:
+                logger.log(logging.INFO, "Lost connection - Working node " + self.formattedAddr)
                 self.isActive = False
 
-            try:
-                pickle.loads(data)
-            except:
-                continue
-            break
+            if "\n\n12345ZEEK6789\n" in data:
+                logger.log(logging.DEBUG, "Data " + str(len(data)) + " " + self.formattedAddr)
+                data = data.split("\n\n12345ZEEK6789\n")
+                self.data = "\n\n12345ZEEK6789\n".join(data[1:])
+                break
 
         if self.isActive == False:
             return
 
-        return pickle.loads(data)
+        return pickle.loads(data[0])
 
     def disconnect(self):
         """Disconnects the client"""

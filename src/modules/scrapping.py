@@ -30,11 +30,17 @@ def visit(url):
     bsParsingTime = time.time() - start_time
 
     # for testing
+    #illegal symbols
+    illegal = [".mp4", ".mp3", ".flv", ".m4a", \
+              ".jpg", ".png", ".gif",\
+              ".xml", ".pdf", ".mp4"]
+
     links = bs.find_all('a')
     links = [s.get('href') for s in links]
     links = [unicode(s) for s in links]
+    for ext in illegal:
+        links = [s for s in links if ext not in s]
     links = [s for s in links if s.startswith("http:") or s.startswith("https:")]
-    links = [s for s in links if not s.endswith(".mp4") or s.endswith(".mp3") or s.endswith(".jpg") or s.endswith(".png") or s.endswith(".xml")]
     foundUrl = set(links)
 
     logger.log(logging.DEBUG, "Scrapping done...")
