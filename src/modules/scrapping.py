@@ -17,7 +17,7 @@ class Session:
 
 def visit(url):
     """Visits a given URL and return all the data"""
-    logger.log(logging.DEBUG, "Scrapping..." + str(url))
+    logger.log(logging.INFO, "Scrapping..." + str(url))
 
     start_time = time.time()
     request = urllib2.Request(url)
