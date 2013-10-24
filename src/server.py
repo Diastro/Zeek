@@ -116,20 +116,20 @@ class Server:
     def mainRoutine(self):
         """To Come in da future. For now, no use"""
         logger.log(logging.INFO, "Starting server mainRoutine")
-        payload = protocol.URLPayload([str("http://www.businessinsider.com")], protocol.URLPayload.TOVISIT)
-        packet = protocol.Packet(protocol.URL, payload)
-        outputQueue.put(packet)
-
-        payload = protocol.URLPayload([str("http://www.lapresse.ca")], protocol.URLPayload.TOVISIT)
-        packet = protocol.Packet(protocol.URL, payload)
-        outputQueue.put(packet)
+        # payload = protocol.URLPayload([str("http://www.businessinsider.com")], protocol.URLPayload.TOVISIT)
+        # packet = protocol.Packet(protocol.URL, payload)
+        # outputQueue.put(packet)
+        #
+        # payload = protocol.URLPayload([str("http://www.lapresse.ca")], protocol.URLPayload.TOVISIT)
+        # packet = protocol.Packet(protocol.URL, payload)
+        # outputQueue.put(packet)
 
         payload = protocol.URLPayload([str("http://www.reddit.com")], protocol.URLPayload.TOVISIT)
         packet = protocol.Packet(protocol.URL, payload)
         outputQueue.put(packet)
 
-        urlVisited["http://www.businessinsider.com"] = True
-        urlVisited["http://www.lapresse.ca"] = True
+        #urlVisited["http://www.businessinsider.com"] = True
+        #urlVisited["http://www.lapresse.ca"] = True
         urlVisited["http://www.reddit.com"] = True
 
         while self.isActive:
@@ -265,7 +265,7 @@ class SSClient:
             logger.log(logging.DEBUG, "Buffer " + str(len(buffer)) + " " + self.formattedAddr)
 
             if not buffer:
-                logger.log(logging.INFO, "Lost connection - Working node " + self.formattedAddr)
+                logger.log(logging.INFO, logger.GREEN + "Lost connection - Working node " + self.formattedAddr + logger.NOCOLOR)
                 self.isActive = False
 
             if "\n\n12345ZEEK6789\n" in data:
@@ -276,6 +276,8 @@ class SSClient:
 
         if self.isActive == False:
             return
+
+        logger.log(logging.INFO, "Data " + str(len(data[0])) + " " + self.formattedAddr)
 
         return pickle.loads(data[0])
 
@@ -293,11 +295,11 @@ def handler(signum, frame):
         visited = len(visitedURLlist)
 
         #temp for testing
-        for url in visitedURLlist:
-            logger.log(logging.DEBUG, "Visited : " + url)
-
-        for url in scrappedURLlist:
-            logger.log(logging.DEBUG, "Scrapped : " + url)
+        # for url in visitedURLlist:
+        #     logger.log(logging.DEBUG, "Visited : " + url)
+        #
+        # for url in scrappedURLlist:
+        #     logger.log(logging.DEBUG, "Scrapped : " + url)
 
         print("\n\n-------------------------")
         print("Scrapped : " + str(scrapped))

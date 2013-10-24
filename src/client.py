@@ -196,6 +196,7 @@ class WorkingNode():
         try:
             #logger.log(logging.DEBUG, "Writing to server")
             serializedObj = pickle.dumps(obj)
+            logger.log(logging.INFO, "Sent " + str(len(serializedObj + '\n\n12345ZEEK6789\n')))
             self.s.sendall(serializedObj + '\n\n12345ZEEK6789\n')
             logger.log(logging.DEBUG, "Writing to server " + str(len(serializedObj + '\n\n12345ZEEK6789\n')))
         except:
