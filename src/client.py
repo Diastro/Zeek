@@ -13,6 +13,7 @@ import modules.protocol as protocol
 import modules.scrapping as scrapping
 
 buffSize = 524288
+delimiter = '\n\n12345ZEEK6789\n'
 
 
 class WorkingNode():
@@ -194,17 +195,20 @@ class WorkingNode():
 
     def writeSocket(self, obj):
         try:
-            #logger.log(logging.DEBUG, "Writing to server")
             serializedObj = pickle.dumps(obj)
-            logger.log(logging.INFO, "Sent " + str(len(serializedObj + '\n\n12345ZEEK6789\n')))
-            self.s.sendall(serializedObj + '\n\n12345ZEEK6789\n')
-            logger.log(logging.DEBUG, "Writing to server " + str(len(serializedObj + '\n\n12345ZEEK6789\n')))
+            logger.log(logging.DEBUG, "Sending " + str(len(serializedObj + delimiter)) + " bytes to server")
+            self.s.sendall(serializedObj + delimiter)
         except:
             raise Exception("Unable to write to socket (lost connection to server)")
 
     def readSocket(self, timeOut=None):
         self.s.settimeout(timeOut)
         data = self.data
+
+        if "\n\n12345ZEEK6789\n" in data:
+            data = data.split("\n\n12345ZEEK6789\n")
+            self.data = "\n\n12345ZEEK6789\n".join(data[1:])
+            return pickle.loads(data[0])
 
         while self.isActive:
             buffer = self.s.recv(buffSize)
@@ -221,6 +225,8 @@ class WorkingNode():
 
         if self.isActive == False:
             return
+
+        logger.log(logging.DEBUG, "Receiving " + str(len(data[0])) + " bytes from server")
 
         return pickle.loads(data[0])
 

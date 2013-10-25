@@ -17,7 +17,7 @@ class Session:
 
 def visit(url):
     """Visits a given URL and return all the data"""
-    logger.log(logging.INFO, "Scrapping..." + str(url))
+    logger.log(logging.INFO, "Scrapping : " + str(url))
 
     start_time = time.time()
     request = urllib2.Request(url)
@@ -32,8 +32,8 @@ def visit(url):
     # for testing
     #illegal symbols
     illegal = [".mp4", ".mp3", ".flv", ".m4a", \
-              ".jpg", ".png", ".gif",\
-              ".xml", ".pdf", ".mp4"]
+               ".jpg", ".png", ".gif", \
+               ".xml", ".pdf", ".gz", ".zip"]
 
     links = bs.find_all('a')
     links = [s.get('href') for s in links]
@@ -43,5 +43,5 @@ def visit(url):
     links = [s for s in links if s.startswith("http:") or s.startswith("https:")]
     foundUrl = set(links)
 
-    logger.log(logging.DEBUG, "Scrapping done...")
+    logger.log(logging.DEBUG, "Scrapping complete.")
     return Session(url, data.getcode(), data.info(), urlRequestTime, bsParsingTime , bs, foundUrl)

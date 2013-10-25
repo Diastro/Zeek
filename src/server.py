@@ -14,6 +14,7 @@ import modules.logger as logger
 import modules.protocol as protocol
 
 buffSize = 524288
+delimiter = '\n\n12345ZEEK6789\n'
 
 # (string:url) - Crawling algo
 urlVisited = dict() # url already visited
@@ -156,26 +157,26 @@ class SSClient:
         self.socket = socket
         self.address = address
         self.isActive = True
-        self.formattedAddr = logger.formatBrackets(str(str(address[0]) + ":" + str(address[1])))
+        self.formattedAddr = logger.formatBrackets(str(str(address[0]) + ":" + str(address[1]))) + " "
         self.sentCount = 0
         self.data = ""
 
-        logger.log(logging.INFO, logger.GREEN + "Working node connected " + self.formattedAddr + logger.NOCOLOR)
+        logger.log(logging.INFO, logger.GREEN + self.formattedAddr + "Working node connected" + logger.NOCOLOR)
 
     def sendConfig(self):
         """Sends the configuration to the client"""
-        logger.log(logging.DEBUG, "Sending configuration to " + self.formattedAddr)
+        logger.log(logging.DEBUG, self.formattedAddr + "Sending configuration")
 
         payload = protocol.ConfigurationPayload(protocol.ConfigurationPayload.DYNAMIC_CRAWLING)
         packet = protocol.Packet(protocol.CONFIG, payload)
         self.writeSocket(packet)
 
-        logger.log(logging.DEBUG, "Configuration sent waiting for ACK. " + self.formattedAddr)
+        logger.log(logging.DEBUG, self.formattedAddr + "Configuration sent waiting for ACK")
         packet = self.readSocket(5)
 
         if packet.type == protocol.INFO:
             if packet.payload.info == protocol.InfoPayload.CLIENT_ACK:
-                logger.log(logging.DEBUG, "Working node ACK received (configuration) " + self.formattedAddr)
+                logger.log(logging.DEBUG, self.formattedAddr + "Working node ACK received (configuration)")
                 return
             else:
                 self.isActive = False
@@ -188,7 +189,7 @@ class SSClient:
 
     def inputThread(self):
         """Listens for inputs from the client"""
-        logger.log(logging.DEBUG, "Listening for packets " + self.formattedAddr)
+        logger.log(logging.DEBUG, self.formattedAddr +  "Listening for packets")
 
         while self.isActive:
             try:
@@ -213,8 +214,7 @@ class SSClient:
             for packet in packetToBroadCast:
                 self.writeSocket(packet)
                 self.sentCount = self.sentCount+1
-                logger.log(logging.INFO, "Sent URL to  " + self.formattedAddr + " " + str(packet.payload.urlList[0]))
-                logger.log(logging.DEBUG, "Packet of type " + str(packet.type) + " sent to " + self.formattedAddr)
+                logger.log(logging.DEBUG, self.formattedAddr + "Sending URL " + str(packet.payload.urlList[0]))
 
     def dispatcher(self, packet):
         """Dispatches packets to the right packet queue or takes action if needed (ie: infoPacket)"""
@@ -223,24 +223,24 @@ class SSClient:
         logger.log(logging.DEBUG, "Dispatching packet of type: " + str(packet.type))
 
         if packet.type == protocol.INFO:
-            logger.log(logging.DEBUG, "Website received INFO packet from node " + self.formattedAddr)
+            logger.log(logging.DEBUG, self.formattedAddr + "Received INFO packet")
         elif packet.type == protocol.URL:
 
             if packet.payload.type == protocol.URLPayload.SCRAPPED:
-                logger.log(logging.INFO, "Received " + str(len(packet.payload.urlList)) + " / " + str(len(scrappedURLlist)) + " - " + str(len(skippedURLlist)) + " from node " + self.formattedAddr)
+                logger.log(logging.INFO, self.formattedAddr + "Received " + str(len(packet.payload.urlList)) + " / " + str(len(scrappedURLlist)) + " - " + str(len(skippedURLlist)))
                 for url in packet.payload.urlList:
                     urlPool.put(url)
 
             if packet.payload.type == protocol.URLPayload.VISITED:
                 self.sentCount = self.sentCount-1
                 for url in packet.payload.urlList:
-                    logger.log(logging.DEBUG, "Visited " + url + " from node " + self.formattedAddr)
+                    logger.log(logging.DEBUG, self.formattedAddr + "Visited : " + url)
                     visitedURLlist.append(url)
 
             if packet.payload.type == protocol.URLPayload.SKIPPED:
                 self.sentCount = self.sentCount-1
                 for url in packet.payload.urlList:
-                    logger.log(logging.DEBUG, "Skipped " + url + " from node " + self.formattedAddr)
+                    logger.log(logging.INFO, logger.YELLOW + self.formattedAddr + "Skipped : " + url + logger.NOCOLOR)
                     skippedURLlist.append(url)
 
         else:
@@ -249,9 +249,9 @@ class SSClient:
 
     def writeSocket(self, obj):
         try:
-            logger.log(logging.DEBUG, "Writing to " + self.formattedAddr)
             serializedObj = pickle.dumps(obj)
-            self.socket.sendall(serializedObj + '\n\n12345ZEEK6789\n')
+            logger.log(logging.DEBUG, self.formattedAddr + "Sending " + str(len(serializedObj + delimiter)) + " bytes")
+            self.socket.sendall(serializedObj + delimiter)
         except:
             raise Exception("Unable to write to socket (client disconnected)")
 
@@ -259,18 +259,20 @@ class SSClient:
         self.socket.settimeout(timeOut)
         data = self.data
 
+        if "\n\n12345ZEEK6789\n" in data:
+            data = data.split("\n\n12345ZEEK6789\n")
+            self.data = "\n\n12345ZEEK6789\n".join(data[1:])
+            return pickle.loads(data[0])
+
         while self.isActive:
             buffer = self.socket.recv(buffSize)
             data = data + buffer
 
-            logger.log(logging.DEBUG, "Buffer " + str(len(buffer)) + " " + self.formattedAddr)
-
             if not buffer:
-                logger.log(logging.INFO, logger.GREEN + "Lost connection - Working node " + self.formattedAddr + logger.NOCOLOR)
+                logger.log(logging.INFO, logger.GREEN + self.formattedAddr + "Lost connection" + logger.NOCOLOR)
                 self.isActive = False
 
             if "\n\n12345ZEEK6789\n" in data:
-                logger.log(logging.DEBUG, "Data " + str(len(data)) + " " + self.formattedAddr)
                 data = data.split("\n\n12345ZEEK6789\n")
                 self.data = "\n\n12345ZEEK6789\n".join(data[1:])
                 break
@@ -278,13 +280,13 @@ class SSClient:
         if self.isActive == False:
             return
 
-        logger.log(logging.INFO, "Data " + str(len(data[0])) + " " + self.formattedAddr)
+        logger.log(logging.DEBUG, self.formattedAddr + "Receiving " + str(len(data[0])) + " bytes")
 
         return pickle.loads(data[0])
 
     def disconnect(self):
         """Disconnects the client"""
-        logger.log(logging.DEBUG, "Disconnecting - Working node " + self.formattedAddr)
+        logger.log(logging.DEBUG, self.formattedAddr + "Disconnecting")
         self.isActive = False
         self.socket.close()
 
@@ -307,7 +309,7 @@ def handler(signum, frame):
         print("Skipped : " + str(skipped))
         print("Visited : " + str(visited))
         print("-------------------------")
-        print(float(visited/skipped))
+        print(float(skipped)/float(skipped+visited) * 100)
     except:
         #handles cases where crawling did occur (list were empty)
         pass
