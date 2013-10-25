@@ -116,22 +116,22 @@ class Server:
 
     def mainRoutine(self):
         """To Come in da future. For now, no use"""
-        #logger.log(logging.INFO, "Starting server mainRoutine")
-        #payload = protocol.URLPayload([str("http://www.businessinsider.com")], protocol.URLPayload.TOVISIT)
-        #packet = protocol.Packet(protocol.URL, payload)
-        #outputQueue.put(packet)
+        logger.log(logging.INFO, "Starting server mainRoutine")
+        payload = protocol.URLPayload([str("http://www.businessinsider.com")], protocol.URLPayload.TOVISIT)
+        packet = protocol.Packet(protocol.URL, payload)
+        outputQueue.put(packet)
 
         # payload = protocol.URLPayload([str("http://www.lapresse.ca")], protocol.URLPayload.TOVISIT)
         # packet = protocol.Packet(protocol.URL, payload)
         # outputQueue.put(packet)
 
-        payload = protocol.URLPayload([str("http://www.reddit.com")], protocol.URLPayload.TOVISIT)
-        packet = protocol.Packet(protocol.URL, payload)
-        outputQueue.put(packet)
+        # payload = protocol.URLPayload([str("http://www.reddit.com")], protocol.URLPayload.TOVISIT)
+        # packet = protocol.Packet(protocol.URL, payload)
+        # outputQueue.put(packet)
 
-        #urlVisited["http://www.businessinsider.com"] = True
-        #urlVisited["http://www.lapresse.ca"] = True
-        urlVisited["http://www.reddit.com"] = True
+        urlVisited["http://www.businessinsider.com"] = True
+        urlVisited["http://www.lapresse.ca"] = True
+        #urlVisited["http://www.reddit.com"] = True
 
         while self.isActive:
             try:
