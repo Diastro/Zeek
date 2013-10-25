@@ -147,13 +147,13 @@ class WorkingNode():
                     continue
 
                 for url in urlList:
-                    try:
-                        session = scrapping.visit(url)
-                        logger.log(logging.DEBUG, "Session \n" + str(session.url) +
-                          "\nCode : " + str(session.returnCode) +
-                          "\nRequest time : " + str(session.requestTime) +
-                          "\nBs time : " + str(session.bsParsingTime))
+                    session = scrapping.visit(url)
+                    logger.log(logging.DEBUG, "Session \n" + str(session.url) +
+                      "\nCode : " + str(session.returnCode) +
+                      "\nRequest time : " + str(session.requestTime) +
+                      "\nBs time : " + str(session.bsParsingTime))
 
+                    if not session.failed:
                         payload = protocol.URLPayload(session.scrappedURLs, protocol.URLPayload.SCRAPPED)
                         packet = protocol.Packet(protocol.URL, payload)
                         self.outputQueue.put(packet)
@@ -161,11 +161,7 @@ class WorkingNode():
                         payload = protocol.URLPayload([url], protocol.URLPayload.VISITED)
                         packet = protocol.Packet(protocol.URL, payload)
                         self.outputQueue.put(packet)
-                    except:
-                        exc_type, exc_value, exc_traceback = sys.exc_info()
-                        message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
-                        logger.log(logging.CRITICAL, message)
-
+                    else:
                         logger.log(logging.INFO, "Skipping URL : " + url)
                         payload = protocol.URLPayload([url], protocol.URLPayload.SKIPPED)
                         packet = protocol.Packet(protocol.URL, payload)
