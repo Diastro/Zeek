@@ -48,7 +48,7 @@ def visit(url):
             links = [s for s in links if ext not in s]
         links = [s for s in links if s.startswith("http:") or s.startswith("https:")]
         foundUrl = set(links)
-        logger.log(logging.INFO, "Scrapping complete")
+        logger.log(logging.DEBUG, "Scrapping complete")
         return Session(url, False, data.getcode(), data.info(), urlRequestTime, bsParsingTime , bs, foundUrl)
 
     except urllib2.HTTPError, err:
