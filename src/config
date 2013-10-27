@@ -1,13 +1,22 @@
 [server]
-#listeningAddr = 127.0.0.1
-listeningAddr = 132.207.114.185
+listeningAddr = 127.0.0.1
+#listeningAddr = 132.207.114.185
 listeningPort = 5050
 
 [client]
-#hostAddr = 127.0.0.1
-hostAddr = kepler.step.polymtl.ca
+hostAddr = 127.0.0.1
+#hostAddr = kepler.step.polymtl.ca
 hostPort = 5050
 
 [common]
 verbose = False
 logPath = logs/
+crawling = dynamic
+
+[dynamic]
+domainRestricted = True
+requestLimit = 0
+crawlDelay = 0
+
+[static]
+crawlDelay = 0

@@ -58,12 +58,16 @@ class WorkingNode():
         if self.isActive:
             try:
                 deserializedPacket = self.readSocket()
+                logger.log(logging.DEBUG, "Configuration received.")
+
                 if deserializedPacket.type == protocol.CONFIG:
                     self.crawlingType = deserializedPacket.payload.crawlingType
+                    self.domainRestricted = deserializedPacket.payload.domainRestricted
+
                     payload = protocol.InfoPayload(protocol.InfoPayload.CLIENT_ACK)
                     packet = protocol.Packet(protocol.INFO, payload)
                     self.writeSocket(packet)
-                    logger.log(logging.DEBUG, "Configuration received.")
+
                     logger.log(logging.DEBUG, "Sending ACK for configuration.")
                 else:
                     raise Exception("Unable to parse configuration.")
@@ -147,18 +151,19 @@ class WorkingNode():
                     continue
 
                 for url in urlList:
-                    session = scrapping.visit(url)
+                    session = scrapping.visit(url, self.domainRestricted)
                     logger.log(logging.DEBUG, "Session \n" + str(session.url) +
                       "\nCode : " + str(session.returnCode) +
                       "\nRequest time : " + str(session.requestTime) +
                       "\nBs time : " + str(session.bsParsingTime))
 
                     if not session.failed:
-                        payload = protocol.URLPayload(session.scrappedURLs, protocol.URLPayload.SCRAPPED)
-                        packet = protocol.Packet(protocol.URL, payload)
-                        self.outputQueue.put(packet)
+                        if self.crawlingType == protocol.ConfigurationPayload.DYNAMIC_CRAWLING:
+                            payload = protocol.URLPayload(session.scrappedURLs, protocol.URLPayload.SCRAPPED_URL)
+                            packet = protocol.Packet(protocol.URL, payload)
+                            self.outputQueue.put(packet)
 
-                        payload = protocol.URLPayload([url], protocol.URLPayload.VISITED)
+                        payload = protocol.URLPayload([url], protocol.URLPayload.VISITED, session.dataContainer.title)
                         packet = protocol.Packet(protocol.URL, payload)
                         self.outputQueue.put(packet)
                     else:
@@ -176,7 +181,9 @@ class WorkingNode():
 
     def dispatcher(self, packet):
         """Dispatches packets to the right packet queue"""
-        if packet.type == protocol.INFO:
+        if packet is None:
+            return
+        elif packet.type == protocol.INFO:
             logger.log(logging.DEBUG, "Dispatching INFO packet")
             self.infoQueue.put(packet)
         elif packet.type == protocol.URL:
@@ -211,7 +218,7 @@ class WorkingNode():
             data = data + buffer
 
             if not buffer:
-                logger.log(logging.INFO, "Lost connection to server " + self.masterNodeFormattedAddr)
+                logger.log(logging.INFO, "\nLost connection to server " + self.masterNodeFormattedAddr)
                 self.isActive = False
 
             if "\n\n12345ZEEK6789\n" in data:
@@ -258,7 +265,6 @@ def main():
         time.sleep(0.5)
 
     node.disconnect()
-    logger.log(logging.INFO, "Exiting. ByeBye")
 
 if __name__ == "__main__":
     main()

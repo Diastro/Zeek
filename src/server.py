@@ -1,5 +1,7 @@
 import ConfigParser
 import datetime
+from distutils.command.config import config
+from itertools import product
 import logging
 import pickle
 import Queue
@@ -31,6 +33,7 @@ outputQueue = Queue.Queue(200)
 
 # temporary for server.run()
 serverRunning = False
+tempoBiTitle = []
 
 
 class Server:
@@ -40,8 +43,10 @@ class Server:
         self.s = None
         self.clientDict = {}
         self.isActive = True
+        self.requestLimit = 0
+        self.requestCount = 0
 
-    def setup(self):
+    def setup(self, configuration):
         """Basic setup operation (socket binding, listen, etc)"""
         logger.log(logging.DEBUG, "Socket initialization")
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -49,6 +54,9 @@ class Server:
         self.s.bind((self.host, self.port))
         self.s.listen(5)
         logger.log(logging.INFO, "Listening on [" + str(self.host) + ":" + str(self.port) + "]")
+
+        self.configurationPayload = configuration
+        self.requestLimit = configuration.requestLimit
 
     def run(self):
         """Launches the urlDispatcher and mainRoutine threads"""
@@ -86,7 +94,7 @@ class Server:
             logger.log(logging.DEBUG, "Working node connected : " + str(self.clientDict[clients].id))
 
         try:
-            client.sendConfig()
+            client.sendConfig(self.configurationPayload)
             client.run()
             while client.isActive:
                 time.sleep(0.3)
@@ -130,7 +138,7 @@ class Server:
         # outputQueue.put(packet)
 
         urlVisited["http://www.businessinsider.com"] = True
-        urlVisited["http://www.lapresse.ca"] = True
+        #urlVisited["http://www.lapresse.ca"] = True
         #urlVisited["http://www.reddit.com"] = True
 
         while self.isActive:
@@ -139,16 +147,27 @@ class Server:
                 payload = protocol.URLPayload([str(url)], protocol.URLPayload.TOVISIT)
                 packet = protocol.Packet(protocol.URL, payload)
                 outputQueue.put(packet)
+                self.requestCount = self.requestCount + 1
+
+                if self.configurationPayload.crawlDelay != 0:
+                    time.sleep(self.configurationPayload.crawlDelay)
+
+                if self.requestLimit != 0 and len(visitedURLlist)+1 > self.requestLimit:
+                    break
             except:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 message = "\n" + ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
                 logger.log(logging.ERROR, message)
 
+        logger.log(logging.INFO, "Request limit reached. Terminating...")
+        self.disconnectAllClient()
+        self.isActive = False
+
     def disconnectAllClient(self):
         """Disconnects all clients"""
         for connectedClient in self.clientDict:
             self.clientDict[connectedClient].disconnect()
-            logger.log(logging.DEBUG, "Disconnected : " + str(self.clientDict[connectedClient].id))
+            logger.log(logging.INFO, logger.RED + "Disconnected : " + str(self.clientDict[connectedClient].id) + logger.NOCOLOR)
 
 
 class SSClient:
@@ -160,15 +179,17 @@ class SSClient:
         self.formattedAddr = logger.formatBrackets(str(str(address[0]) + ":" + str(address[1]))) + " "
         self.sentCount = 0
         self.data = ""
+        self.configuration = None
 
         logger.log(logging.INFO, logger.GREEN + self.formattedAddr + "Working node connected" + logger.NOCOLOR)
 
-    def sendConfig(self):
+    def sendConfig(self, configuration):
         """Sends the configuration to the client"""
         logger.log(logging.DEBUG, self.formattedAddr + "Sending configuration")
+        self.configuration = configuration
 
         payload = protocol.ConfigurationPayload(protocol.ConfigurationPayload.DYNAMIC_CRAWLING)
-        packet = protocol.Packet(protocol.CONFIG, payload)
+        packet = protocol.Packet(protocol.CONFIG, self.configuration)
         self.writeSocket(packet)
 
         logger.log(logging.DEBUG, self.formattedAddr + "Configuration sent waiting for ACK")
@@ -226,7 +247,7 @@ class SSClient:
             logger.log(logging.DEBUG, self.formattedAddr + "Received INFO packet")
         elif packet.type == protocol.URL:
 
-            if packet.payload.type == protocol.URLPayload.SCRAPPED:
+            if packet.payload.type == protocol.URLPayload.SCRAPPED_URL:
                 logger.log(logging.INFO, self.formattedAddr + "Received " + str(len(packet.payload.urlList)) + " / " + str(len(scrappedURLlist)) + " - " + str(len(skippedURLlist)))
                 for url in packet.payload.urlList:
                     urlPool.put(url)
@@ -236,6 +257,8 @@ class SSClient:
                 for url in packet.payload.urlList:
                     logger.log(logging.DEBUG, self.formattedAddr + "Visited : " + url)
                     visitedURLlist.append(url)
+                if packet.payload.data is not None:
+                    tempoBiTitle.append(packet.payload.data)
 
             if packet.payload.type == protocol.URLPayload.SKIPPED:
                 self.sentCount = self.sentCount-1
@@ -269,7 +292,7 @@ class SSClient:
             data = data + buffer
 
             if not buffer:
-                logger.log(logging.INFO, logger.GREEN + self.formattedAddr + "Lost connection" + logger.NOCOLOR)
+                logger.log(logging.INFO, logger.RED + self.formattedAddr + "Lost connection" + logger.NOCOLOR)
                 self.isActive = False
 
             if "\n\n12345ZEEK6789\n" in data:
@@ -296,6 +319,7 @@ def handler(signum, frame):
         scrapped = len(scrappedURLlist)
         skipped = len(skippedURLlist)
         visited = len(visitedURLlist)
+        skipRate = (float(skipped)/float(skipped+visited) * 100)
 
         #temp for testing
         # for url in visitedURLlist:
@@ -304,17 +328,18 @@ def handler(signum, frame):
         # for url in scrappedURLlist:
         #     logger.log(logging.DEBUG, "Scrapped : " + url)
 
+        for title in tempoBiTitle:
+             logger.log(logging.INFO, "Title : " + title)
+
         print("\n\n-------------------------")
         print("Scrapped : " + str(scrapped))
         print("Skipped : " + str(skipped))
         print("Visited : " + str(visited))
         print("-------------------------")
-        print(float(skipped)/float(skipped+visited) * 100)
+        print(str(skipRate) + "% skipping rate\n")
     except:
         #handles cases where crawling did occur (list were empty)
         pass
-
-    print("\n\nExiting. ByeBye")
     sys.exit()
 
 def main():
@@ -335,16 +360,56 @@ def main():
     logger.init(logPath, "server-" + str(datetime.datetime.now()))
     logger.debugFlag = verbose
 
+    #node configuration
+    crawling = config.get('common', 'crawling')
+
+    if crawling == 'dynamic':
+        domainRestricted = config.get('dynamic', 'domainRestricted')
+        requestLimit = config.getint('dynamic', 'requestLimit')
+        crawlDelay = config.getfloat('dynamic', 'crawlDelay')
+
+        if domainRestricted == "True" or domainRestricted == "true":
+            domainRestricted = True
+        else:
+            domainRestricted = False
+
+        nodeConfig = protocol.ConfigurationPayload(protocol.ConfigurationPayload.DYNAMIC_CRAWLING)
+        nodeConfig.domainRestricted = domainRestricted
+        nodeConfig.requestLimit = requestLimit
+        nodeConfig.crawlDelay = crawlDelay
+    else:
+        crawlDelay = config.getfloat('static', 'crawlDelay')
+        nodeConfig = protocol.ConfigurationPayload(protocol.ConfigurationPayload.STATIC_CRAWLING)
+        nodeConfig.crawlDelay = crawlDelay
+
     #server
     server = Server(host, port)
-    server.setup()
+    server.setup(nodeConfig)
     thread.start_new_thread(server.listen, ()) #testing
 
     while server.isActive:
         time.sleep(0.5)
 
     server.disconnectAllClient()
-    logger.log(logging.INFO, "Exiting. ByeBye")
+
+    try:
+        scrapped = len(scrappedURLlist)
+        skipped = len(skippedURLlist)
+        visited = len(visitedURLlist)
+        skipRate = (float(skipped)/float(skipped+visited) * 100)
+
+        for title in tempoBiTitle:
+             logger.log(logging.INFO, "Title : " + title)
+
+        print("\n\n-------------------------")
+        print("Scrapped : " + str(scrapped))
+        print("Skipped : " + str(skipped))
+        print("Visited : " + str(visited))
+        print("-------------------------")
+        print(str(skipRate) + "% skipping rate\n")
+    except:
+        #handles cases where crawling did occur (list were empty)
+        pass
 
 
 if __name__ == "__main__":

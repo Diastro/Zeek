@@ -15,10 +15,14 @@ class Packet:
 
 
 class ConfigurationPayload():
-    STATIC_CRAWLING = 0
-    DYNAMIC_CRAWLING = 1
+    STATIC_CRAWLING = 'STATIC'
+    DYNAMIC_CRAWLING = 'DYNAMIC'
+
     def __init__(self, crawlingType):
         self.crawlingType = crawlingType
+        self.domainRestricted = False
+        self.requestLimit = 0
+        self.crawlDelay = 0
 
 
 class InfoPayload():
@@ -33,11 +37,13 @@ class URLPayload():
     VISITED = 'VISITED'
     SKIPPED = 'SKIPPED'
     TOVISIT = 'TOVISIT'
-    SCRAPPED = 'SCRAPPED'
+    SCRAPPED_URL = 'SCRAPPED'
 
-    def __init__(self, urlList, type):
+    def __init__(self, urlList, type, data=None):
+        #self.url = url TODO : add url param (to know where the data is coming from)
         self.urlList = []
         self.type = type
+        self.data = data
 
         for url in urlList:
             self.urlList.append(url)
