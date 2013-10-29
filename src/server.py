@@ -3,6 +3,7 @@ import datetime
 from distutils.command.config import config
 from itertools import product
 import logging
+from macpath import split
 import pickle
 import Queue
 import signal
@@ -34,6 +35,7 @@ outputQueue = Queue.Queue(200)
 # temporary for server.run()
 serverRunning = False
 tempoBiTitle = []
+skippedSessions = []
 
 
 class Server:
@@ -125,21 +127,12 @@ class Server:
     def mainRoutine(self):
         """To Come in da future. For now, no use"""
         logger.log(logging.INFO, "Starting server mainRoutine")
-        payload = protocol.URLPayload([str("http://www.businessinsider.com")], protocol.URLPayload.TOVISIT)
-        packet = protocol.Packet(protocol.URL, payload)
-        outputQueue.put(packet)
 
-        # payload = protocol.URLPayload([str("http://www.lapresse.ca")], protocol.URLPayload.TOVISIT)
-        # packet = protocol.Packet(protocol.URL, payload)
-        # outputQueue.put(packet)
-
-        # payload = protocol.URLPayload([str("http://www.reddit.com")], protocol.URLPayload.TOVISIT)
-        # packet = protocol.Packet(protocol.URL, payload)
-        # outputQueue.put(packet)
-
-        urlVisited["http://www.businessinsider.com"] = True
-        #urlVisited["http://www.lapresse.ca"] = True
-        #urlVisited["http://www.reddit.com"] = True
+        for url in self.configurationPayload.rootUrls:
+            payload = protocol.URLPayload([str(url)], protocol.URLPayload.TOVISIT)
+            packet = protocol.Packet(protocol.URL, payload)
+            urlVisited[url] = True
+            outputQueue.put(packet)
 
         while self.isActive:
             try:
@@ -265,6 +258,7 @@ class SSClient:
                 for url in packet.payload.urlList:
                     logger.log(logging.INFO, logger.YELLOW + self.formattedAddr + "Skipped : " + url + logger.NOCOLOR)
                     skippedURLlist.append(url)
+                skippedSessions.append(packet.payload.session)
 
         else:
             logger.log(logging.CRITICAL, "Unrecognized packet type : " + str(packet.type) + ". This packet was dropped")
@@ -314,22 +308,23 @@ class SSClient:
         self.socket.close()
 
 
-def handler(signum, frame):
+def ending():
+    """Temporary ending routine"""
     try:
         scrapped = len(scrappedURLlist)
         skipped = len(skippedURLlist)
         visited = len(visitedURLlist)
         skipRate = (float(skipped)/float(skipped+visited) * 100)
 
-        #temp for testing
-        # for url in visitedURLlist:
-        #     logger.log(logging.DEBUG, "Visited : " + url)
-        #
-        # for url in scrappedURLlist:
-        #     logger.log(logging.DEBUG, "Scrapped : " + url)
+        # temporary writes BI article titles to file
+        f = open('BItitles', 'w')
+        foundTitles = set(tempoBiTitle)
+        for title in foundTitles:
+             f.write(title + "\n")
 
-        for title in tempoBiTitle:
-             logger.log(logging.INFO, "Title : " + title)
+        f = open('error', 'w')
+        for errorSession in skippedSessions:
+             f.write(str(errorSession.returnCode) + "-" + str(errorSession.errorMsg) + " " + str(errorSession.url) + " \n")
 
         print("\n\n-------------------------")
         print("Scrapped : " + str(scrapped))
@@ -341,6 +336,9 @@ def handler(signum, frame):
         #handles cases where crawling did occur (list were empty)
         pass
     sys.exit()
+
+def handler(signum, frame):
+    ending()
 
 def main():
     signal.signal(signal.SIGINT, handler)
@@ -367,6 +365,9 @@ def main():
         domainRestricted = config.get('dynamic', 'domainRestricted')
         requestLimit = config.getint('dynamic', 'requestLimit')
         crawlDelay = config.getfloat('dynamic', 'crawlDelay')
+        rootUrls = config.get('dynamic', 'rootUrls')
+        rootUrls = "".join(rootUrls.split())
+        rootUrls = rootUrls.split(',')
 
         if domainRestricted == "True" or domainRestricted == "true":
             domainRestricted = True
@@ -377,6 +378,7 @@ def main():
         nodeConfig.domainRestricted = domainRestricted
         nodeConfig.requestLimit = requestLimit
         nodeConfig.crawlDelay = crawlDelay
+        nodeConfig.rootUrls = rootUrls
     else:
         crawlDelay = config.getfloat('static', 'crawlDelay')
         nodeConfig = protocol.ConfigurationPayload(protocol.ConfigurationPayload.STATIC_CRAWLING)
@@ -391,25 +393,7 @@ def main():
         time.sleep(0.5)
 
     server.disconnectAllClient()
-
-    try:
-        scrapped = len(scrappedURLlist)
-        skipped = len(skippedURLlist)
-        visited = len(visitedURLlist)
-        skipRate = (float(skipped)/float(skipped+visited) * 100)
-
-        for title in tempoBiTitle:
-             logger.log(logging.INFO, "Title : " + title)
-
-        print("\n\n-------------------------")
-        print("Scrapped : " + str(scrapped))
-        print("Skipped : " + str(skipped))
-        print("Visited : " + str(visited))
-        print("-------------------------")
-        print(str(skipRate) + "% skipping rate\n")
-    except:
-        #handles cases where crawling did occur (list were empty)
-        pass
+    ending()
 
 
 if __name__ == "__main__":

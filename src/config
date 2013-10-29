@@ -14,9 +14,10 @@ logPath = logs/
 crawling = dynamic
 
 [dynamic]
-domainRestricted = True
+domainRestricted = False
 requestLimit = 0
 crawlDelay = 0
+rootUrls = http://www.businessinsider.com
 
 [static]
 crawlDelay = 0

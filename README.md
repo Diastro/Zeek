@@ -1,7 +1,7 @@
 Zeek
 ====
 
-Python distributed web crawling scraper
+Python distributed web crawling / web scraper
 
 ***More info to come...***
 

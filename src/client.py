@@ -12,6 +12,8 @@ import modules.logger as logger
 import modules.protocol as protocol
 import modules.scrapping as scrapping
 
+sys.setrecursionlimit(10000)
+
 buffSize = 524288
 delimiter = '\n\n12345ZEEK6789\n'
 
@@ -159,16 +161,16 @@ class WorkingNode():
 
                     if not session.failed:
                         if self.crawlingType == protocol.ConfigurationPayload.DYNAMIC_CRAWLING:
-                            payload = protocol.URLPayload(session.scrappedURLs, protocol.URLPayload.SCRAPPED_URL)
+                            payload = protocol.URLPayload(session.scrappedURLs, protocol.URLPayload.SCRAPPED_URL, session=session)
                             packet = protocol.Packet(protocol.URL, payload)
                             self.outputQueue.put(packet)
 
-                        payload = protocol.URLPayload([url], protocol.URLPayload.VISITED, session.dataContainer.title)
+                        payload = protocol.URLPayload([url], protocol.URLPayload.VISITED, data=session.dataContainer.title)
                         packet = protocol.Packet(protocol.URL, payload)
                         self.outputQueue.put(packet)
                     else:
                         logger.log(logging.INFO, "Skipping URL : " + url)
-                        payload = protocol.URLPayload([url], protocol.URLPayload.SKIPPED)
+                        payload = protocol.URLPayload([url], protocol.URLPayload.SKIPPED, session)
                         packet = protocol.Packet(protocol.URL, payload)
                         self.outputQueue.put(packet)
                         continue
@@ -202,6 +204,9 @@ class WorkingNode():
             logger.log(logging.DEBUG, "Sending " + str(len(serializedObj + delimiter)) + " bytes to server")
             self.s.sendall(serializedObj + delimiter)
         except:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+            logger.log(logging.CRITICAL, message)
             raise Exception("Unable to write to socket (lost connection to server)")
 
     def readSocket(self, timeOut=None):

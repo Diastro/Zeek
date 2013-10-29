@@ -12,8 +12,9 @@ def scrape(url, bs):
     # extracting data from businessInsider
     if domain == "www.businessinsider.com":
         stories = bs.find("div", {"class": "sl-layout-post"})
-        title = stories.find("h1")
-        if title is not None:
-            return Container(title.get_text().encode('ascii', 'ignore'))
+        if stories is not None:
+            title = stories.find("h1")
+            if title is not None:
+                return Container(title.get_text().encode('ascii', 'ignore'))
 
     return Container(None)

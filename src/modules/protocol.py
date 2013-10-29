@@ -23,6 +23,7 @@ class ConfigurationPayload():
         self.domainRestricted = False
         self.requestLimit = 0
         self.crawlDelay = 0
+        self.rootUrls = []
 
 
 class InfoPayload():
@@ -39,11 +40,12 @@ class URLPayload():
     TOVISIT = 'TOVISIT'
     SCRAPPED_URL = 'SCRAPPED'
 
-    def __init__(self, urlList, type, data=None):
+    def __init__(self, urlList, type, session=None, data=None):
         #self.url = url TODO : add url param (to know where the data is coming from)
         self.urlList = []
         self.type = type
         self.data = data
+        self.session = session
 
         for url in urlList:
             self.urlList.append(url)
