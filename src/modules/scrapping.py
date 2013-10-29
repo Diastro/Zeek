@@ -78,10 +78,10 @@ def visit(url, domainRestricted):
         return Session(url, True, err.code, "no data", 0, "", "", errorMsg=err.msg)
     except socket.timeout:
         logger.log(logging.INFO, "Scrapping failed - Timeout")
-        return Session(url, True, -1, "no data", 0, "", "")
+        return Session(url, True, -1, "no data", 0, "", "", errorMsg="Request timeout")
     except:
         logger.log(logging.INFO, "Scrapping failed - Un-handled")
         exc_type, exc_value, exc_traceback = sys.exc_info()
         message = "\n" + ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
         logger.log(logging.ERROR, message)
-        return Session(url, True, -2, "no data", 0, "", "", errorMsg=" ".join([str(exc_type), str(exc_value)]))
+        return Session(url, True, -2, "no data", 0, "", "", errorMsg=traceback.format_exception(exc_type, exc_value, exc_traceback)[-1])
