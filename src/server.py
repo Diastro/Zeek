@@ -1,9 +1,5 @@
-import ConfigParser
 import datetime
-from distutils.command.config import config
-from itertools import product
 import logging
-from macpath import split
 import pickle
 import Queue
 import signal
@@ -15,6 +11,8 @@ import traceback
 import uuid
 import modules.logger as logger
 import modules.protocol as protocol
+import modules.configuration as configuration
+
 
 buffSize = 524288
 delimiter = '\n\n12345ZEEK6789\n'
@@ -136,23 +134,30 @@ class Server:
 
         while self.isActive:
             try:
-                url = urlToVisit.get(True)
-                payload = protocol.URLPayload([str(url)], protocol.URLPayload.TOVISIT)
-                packet = protocol.Packet(protocol.URL, payload)
-                outputQueue.put(packet)
-                self.requestCount = self.requestCount + 1
+                if self.configurationPayload.crawlingType == 'DYNAMIC':
+                    url = urlToVisit.get(True)
+                    payload = protocol.URLPayload([str(url)], protocol.URLPayload.TOVISIT)
+                    packet = protocol.Packet(protocol.URL, payload)
+                    outputQueue.put(packet)
+                    self.requestCount = self.requestCount + 1
 
-                if self.configurationPayload.crawlDelay != 0:
-                    time.sleep(self.configurationPayload.crawlDelay)
+                    if self.configurationPayload.crawlDelay != 0:
+                        time.sleep(self.configurationPayload.crawlDelay)
 
-                if self.requestLimit != 0 and len(visitedURLlist)+1 > self.requestLimit:
-                    break
+                    if self.requestLimit != 0 and len(visitedURLlist)+1 > self.requestLimit:
+                        break
+
+                elif self.configurationPayload.crawlingType == 'STATIC' :
+                    if (len(skippedURLlist+visitedURLlist) == len(self.configurationPayload.rootUrls)):
+                        break
+                    else:
+                        time.sleep(0.3)
             except:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 message = "\n" + ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
                 logger.log(logging.ERROR, message)
 
-        logger.log(logging.INFO, "Request limit reached. Terminating...")
+        logger.log(logging.INFO, "Scrapping complete. Terminating...")
         self.disconnectAllClient()
         self.isActive = False
 
@@ -258,7 +263,6 @@ class SSClient:
                 for url in packet.payload.urlList:
                     logger.log(logging.INFO, logger.YELLOW + self.formattedAddr + "Skipped : " + url + logger.NOCOLOR)
                     skippedURLlist.append(url)
-                skippedSessions.append(packet.payload.session)
 
         else:
             logger.log(logging.CRITICAL, "Unrecognized packet type : " + str(packet.type) + ". This packet was dropped")
@@ -322,10 +326,6 @@ def ending():
         for title in foundTitles:
              f.write(title + "\n")
 
-        f = open('error', 'w')
-        for errorSession in skippedSessions:
-             f.write(str(errorSession.returnCode) + "-" + str(errorSession.errorMsg) + " " + str(errorSession.url) + " \n")
-
         print("\n\n-------------------------")
         print("Scrapped : " + str(scrapped))
         print("Skipped : " + str(skipped))
@@ -343,49 +343,28 @@ def handler(signum, frame):
 def main():
     signal.signal(signal.SIGINT, handler)
     logger.printAsciiLogo()
-    config = ConfigParser.RawConfigParser(allow_no_value=True)
-    config.read('config')
-    host = config.get('server', 'listeningAddr')
-    port = config.getint('server', 'listeningPort')
-    logPath = config.get('common', 'logPath')
-    verbose = config.get('common', 'verbose')
-    if verbose == "True" or verbose == "true":
-        verbose = True
-    else:
-        verbose = False
+
+    #parse config file
+    config = configuration.configParser()
 
     #logging
-    logger.init(logPath, "server-" + str(datetime.datetime.now()))
-    logger.debugFlag = verbose
+    logger.init(config.logPath, "server-" + str(datetime.datetime.now()))
+    logger.debugFlag = config.verbose
 
-    #node configuration
-    crawling = config.get('common', 'crawling')
-
-    if crawling == 'dynamic':
-        domainRestricted = config.get('dynamic', 'domainRestricted')
-        requestLimit = config.getint('dynamic', 'requestLimit')
-        crawlDelay = config.getfloat('dynamic', 'crawlDelay')
-        rootUrls = config.get('dynamic', 'rootUrls')
-        rootUrls = "".join(rootUrls.split())
-        rootUrls = rootUrls.split(',')
-
-        if domainRestricted == "True" or domainRestricted == "true":
-            domainRestricted = True
-        else:
-            domainRestricted = False
-
+    #node configration
+    if config.crawling == 'dynamic':
         nodeConfig = protocol.ConfigurationPayload(protocol.ConfigurationPayload.DYNAMIC_CRAWLING)
-        nodeConfig.domainRestricted = domainRestricted
-        nodeConfig.requestLimit = requestLimit
-        nodeConfig.crawlDelay = crawlDelay
-        nodeConfig.rootUrls = rootUrls
+        nodeConfig.domainRestricted = config.domainRestricted
+        nodeConfig.requestLimit = config.requestLimit
+        nodeConfig.crawlDelay = config.crawlDelay
+        nodeConfig.rootUrls = config.rootUrls
     else:
-        crawlDelay = config.getfloat('static', 'crawlDelay')
         nodeConfig = protocol.ConfigurationPayload(protocol.ConfigurationPayload.STATIC_CRAWLING)
-        nodeConfig.crawlDelay = crawlDelay
+        nodeConfig.crawlDelay = config.crawlDelay
+        nodeConfig.rootUrls = config.rootUrls
 
     #server
-    server = Server(host, port)
+    server = Server(config.host, config.port)
     server.setup(nodeConfig)
     thread.start_new_thread(server.listen, ()) #testing
 
