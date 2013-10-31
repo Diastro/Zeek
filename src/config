@@ -1,6 +1,6 @@
 [server]
-listeningAddr = 127.0.0.1
-#listeningAddr = 132.207.114.185
+#listeningAddr = 127.0.0.1
+listeningAddr = 132.207.114.185
 listeningPort = 5050
 
 [client]
@@ -11,14 +11,14 @@ hostPort = 5050
 [common]
 verbose = False
 logPath = logs/
-crawling = static
+crawling = dynamic
 
 [dynamic]
 domainRestricted = True
-requestLimit = 10
-crawlDelay = 1
-rootUrls = http://www.lapresse.ca
+requestLimit = 0
+crawlDelay = 0
+rootUrls = http://www.businessinsider.com
 
 [static]
 crawlDelay = 0
-rootUrlsPath = urlList.txt
+rootUrlsPath = url.txt

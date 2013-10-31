@@ -255,8 +255,9 @@ class SSClient:
                 for url in packet.payload.urlList:
                     logger.log(logging.DEBUG, self.formattedAddr + "Visited : " + url)
                     visitedURLlist.append(url)
-                if packet.payload.data is not None:
-                    tempoBiTitle.append(packet.payload.data)
+                if hasattr(packet.payload, 'data'):
+                    if packet.payload.data is not None:
+                        tempoBiTitle.append(packet.payload.data)
 
             if packet.payload.type == protocol.URLPayload.SKIPPED:
                 self.sentCount = self.sentCount-1
