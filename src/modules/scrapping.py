@@ -41,7 +41,7 @@ def visit(url, domainRestricted):
         start_time = time.time()
         domain = urlparse.urlsplit(url)[1].split(':')[0]
         request = urllib2.Request(url)
-        request.add_header('User-agent', 'Zeek-Bot/1.0a')
+        request.add_header('User-agent', 'Zeek-Bot-PolytechniqueMTL/1.0a')
         data = urllib2.urlopen(request,  timeout=4)
         urlRequestTime = time.time() - start_time
 
