@@ -9,6 +9,7 @@ import time
 import thread
 import traceback
 import uuid
+import modules.storage as storage
 import modules.logger as logger
 import modules.protocol as protocol
 import modules.configuration as configuration
@@ -30,11 +31,12 @@ skippedURLlist = []
 # (packet+payload) - To be sent to _any_ node
 outputQueue = Queue.Queue(200)
 
+# (session:session) - for storage
+sessionStorageQueue = Queue.Queue(0)
+
 # temporary for server.run()
 serverRunning = False
-tempoBiTitle = []
 skippedSessions = []
-
 
 class Server:
     def __init__(self, host, port):
@@ -63,6 +65,7 @@ class Server:
         logger.log(logging.DEBUG, "Starting beginCrawlingProcedure")
         thread.start_new_thread(self.urlDispatcher, ())
         thread.start_new_thread(self.mainRoutine, ())
+        thread.start_new_thread(self.storageRoutine, ())
 
     def listen(self):
         """Waits for new clients to connect and launches a new client thread accordingly"""
@@ -114,13 +117,17 @@ class Server:
         logger.log(logging.INFO, "Starting server urlDispatcher")
 
         while self.isActive:
-            url = urlPool.get(True)
-
-            if url not in urlVisited:
-                urlVisited[url] = True
-                #logic if static crawling will come here
-                urlToVisit.put(url)
-                scrappedURLlist.append(url)
+            try:
+                url = urlPool.get(True)
+                if url not in urlVisited:
+                    urlVisited[url] = True
+                    #logic if static crawling will come here
+                    urlToVisit.put(url)
+                    scrappedURLlist.append(url)
+            except:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                message = "\n" + ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+                logger.log(logging.ERROR, message)
 
     def mainRoutine(self):
         """To Come in da future. For now, no use"""
@@ -160,6 +167,24 @@ class Server:
         logger.log(logging.INFO, "Scrapping complete. Terminating...")
         self.disconnectAllClient()
         self.isActive = False
+
+    def storageRoutine(self):
+        """Stores session and data"""
+        logger.log(logging.INFO, "Starting server storageRoutine")
+
+        while self.isActive:
+            try:
+                sessions = protocol.deQueue([sessionStorageQueue])
+
+                if not sessions:
+                        continue
+
+                for session in sessions:
+                    storage.writeToFile(session, session.dataContainer)
+            except:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                message = "\n" + ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+                logger.log(logging.ERROR, message)
 
     def disconnectAllClient(self):
         """Disconnects all clients"""
@@ -246,18 +271,19 @@ class SSClient:
         elif packet.type == protocol.URL:
 
             if packet.payload.type == protocol.URLPayload.SCRAPPED_URL:
-                logger.log(logging.INFO, self.formattedAddr + "Received " + str(len(packet.payload.urlList)) + " / " + str(len(scrappedURLlist)) + " - " + str(len(skippedURLlist)))
+                logger.log(logging.INFO, self.formattedAddr + "Receiving scrapped URLs : " + str(len(packet.payload.urlList)) + " / " + str(len(scrappedURLlist)) + " - " + str(len(skippedURLlist)))
                 for url in packet.payload.urlList:
                     urlPool.put(url)
 
             if packet.payload.type == protocol.URLPayload.VISITED:
                 self.sentCount = self.sentCount-1
                 for url in packet.payload.urlList:
-                    logger.log(logging.DEBUG, self.formattedAddr + "Visited : " + url)
+                    logger.log(logging.INFO, self.formattedAddr + "Receiving scrapped data")
+                    logger.log(logging.DEBUG, self.formattedAddr + "Receiving scrapped data" + url)
                     visitedURLlist.append(url)
-                if hasattr(packet.payload, 'data'):
-                    if packet.payload.data is not None:
-                        tempoBiTitle.append(packet.payload.data)
+                if hasattr(packet.payload, 'session'):
+                    if packet.payload.session is not None:
+                        sessionStorageQueue.put(packet.payload.session)
 
             if packet.payload.type == protocol.URLPayload.SKIPPED:
                 self.sentCount = self.sentCount-1
@@ -303,7 +329,6 @@ class SSClient:
             return
 
         logger.log(logging.DEBUG, self.formattedAddr + "Receiving " + str(len(data[0])) + " bytes")
-
         return pickle.loads(data[0])
 
     def disconnect(self):
@@ -320,12 +345,6 @@ def ending():
         skipped = len(skippedURLlist)
         visited = len(visitedURLlist)
         skipRate = (float(skipped)/float(skipped+visited) * 100)
-
-        # temporary writes BI article titles to file
-        f = open('BItitles', 'w')
-        foundTitles = set(tempoBiTitle)
-        for title in foundTitles:
-             f.write(title + "\n")
 
         print("\n\n-------------------------")
         print("Scrapped : " + str(scrapped))

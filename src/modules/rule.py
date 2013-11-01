@@ -1,12 +1,16 @@
 import urlparse
 
 class Container:
-    def __init__(self, title):
+    def __init__(self):
         #data = dict()
-        self.title = title
+        self.hasData = False
+
+        self.title = None
+        self.date = None
 
 def scrape(url, bs):
     # for testing - this is scrapping article titles from www.businessinsider.com
+    container = Container()
     domain = urlparse.urlsplit(url)[1].split(':')[0]
 
     # extracting data from businessInsider
@@ -15,6 +19,13 @@ def scrape(url, bs):
         if stories is not None:
             title = stories.find("h1")
             if title is not None:
-                return Container(title.get_text().encode('ascii', 'ignore'))
+                container.title = title.get_text().encode('ascii', 'ignore')
 
-    return Container(None)
+        stories = bs.find("div", {"class": "sl-layout-post"})
+        if stories is not None:
+            date = stories.find("span", {"class": "date format-date"})
+            if date is not None:
+                container.date = date.get_text().encode('ascii', 'ignore')
+        return container
+
+    return Container()

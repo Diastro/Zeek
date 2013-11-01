@@ -161,11 +161,11 @@ class WorkingNode():
 
                     if not session.failed:
                         if self.crawlingType == protocol.ConfigurationPayload.DYNAMIC_CRAWLING:
-                            payload = protocol.URLPayload(session.scrappedURLs, protocol.URLPayload.SCRAPPED_URL, session=session)
+                            payload = protocol.URLPayload(session.scrappedURLs, protocol.URLPayload.SCRAPPED_URL)
                             packet = protocol.Packet(protocol.URL, payload)
                             self.outputQueue.put(packet)
 
-                        payload = protocol.URLPayload([url], protocol.URLPayload.VISITED, data=session.dataContainer.title)
+                        payload = protocol.URLPayload([url], protocol.URLPayload.VISITED, session=session)
                         packet = protocol.Packet(protocol.URL, payload)
                         self.outputQueue.put(packet)
                     else:

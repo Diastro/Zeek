@@ -60,7 +60,7 @@ def visit(url, domainRestricted):
         links = [s.get('href') for s in links]
         links = [unicode(s) for s in links]
         if domainRestricted:
-            links = [s for s in links if s.startswith("http://" + domain) or s.startswith("https://" + domain)]
+            links = [s for s in links if s.startswith("http://" + domain + "/") or s.startswith("https://" + domain )]
         for ext in illegal:
             links = [s for s in links if ext not in s]
         links = [s for s in links if s.startswith("http:") or s.startswith("https:")]
