@@ -1,4 +1,5 @@
 import datetime
+from distutils.command.config import config
 import logging
 import pickle
 import Queue
@@ -58,7 +59,7 @@ class Server:
         logger.log(logging.INFO, "Listening on [" + str(self.host) + ":" + str(self.port) + "]")
 
         self.configurationPayload = configuration
-        self.requestLimit = configuration.requestLimit
+        self.requestLimit = configuration.config.requestLimit
 
     def run(self):
         """Launches the urlDispatcher and mainRoutine threads"""
@@ -133,29 +134,33 @@ class Server:
         """To Come in da future. For now, no use"""
         logger.log(logging.INFO, "Starting server mainRoutine")
 
-        for url in self.configurationPayload.rootUrls:
+        for url in self.configurationPayload.config.rootUrls:
             payload = protocol.URLPayload([str(url)], protocol.URLPayload.TOVISIT)
             packet = protocol.Packet(protocol.URL, payload)
             urlVisited[url] = True
             outputQueue.put(packet)
 
+            if self.configurationPayload.crawlingType == protocol.ConfigurationPayload.STATIC_CRAWLING and (self.configurationPayload.config.crawlDelay != 0):
+                if self.configurationPayload.config.crawlDelay != 0:
+                        time.sleep(self.configurationPayload.config.crawlDelay)
+
         while self.isActive:
             try:
-                if self.configurationPayload.crawlingType == 'DYNAMIC':
+                if self.configurationPayload.crawlingType == protocol.ConfigurationPayload.DYNAMIC_CRAWLING:
                     url = urlToVisit.get(True)
                     payload = protocol.URLPayload([str(url)], protocol.URLPayload.TOVISIT)
                     packet = protocol.Packet(protocol.URL, payload)
                     outputQueue.put(packet)
                     self.requestCount = self.requestCount + 1
 
-                    if self.configurationPayload.crawlDelay != 0:
-                        time.sleep(self.configurationPayload.crawlDelay)
+                    if self.configurationPayload.config.crawlDelay != 0:
+                        time.sleep(self.configurationPayload.config.crawlDelay)
 
                     if self.requestLimit != 0 and len(visitedURLlist)+1 > self.requestLimit:
                         break
 
-                elif self.configurationPayload.crawlingType == 'STATIC' :
-                    if (len(skippedURLlist+visitedURLlist) == len(self.configurationPayload.rootUrls)):
+                elif self.configurationPayload.crawlingType == protocol.ConfigurationPayload.STATIC_CRAWLING:
+                    if (len(skippedURLlist+visitedURLlist) == len(self.configurationPayload.config.rootUrls)):
                         break
                     else:
                         time.sleep(0.3)
@@ -188,9 +193,10 @@ class Server:
 
     def disconnectAllClient(self):
         """Disconnects all clients"""
+
         for connectedClient in self.clientDict:
-            self.clientDict[connectedClient].disconnect()
-            logger.log(logging.INFO, logger.RED + "Disconnected : " + str(self.clientDict[connectedClient].id) + logger.NOCOLOR)
+            if self.clientDict[connectedClient].isActive:
+                self.clientDict[connectedClient].disconnect()
 
 
 class SSClient:
@@ -211,7 +217,6 @@ class SSClient:
         logger.log(logging.DEBUG, self.formattedAddr + "Sending configuration")
         self.configuration = configuration
 
-        payload = protocol.ConfigurationPayload(protocol.ConfigurationPayload.DYNAMIC_CRAWLING)
         packet = protocol.Packet(protocol.CONFIG, self.configuration)
         self.writeSocket(packet)
 
@@ -248,7 +253,7 @@ class SSClient:
         """Checks if there are messages to send to the client and sends them"""
         while self.isActive:
             if self.sentCount > 5:
-                time.sleep(0.1)
+                time.sleep(0.03)
                 continue
             packetToBroadCast = protocol.deQueue([outputQueue])
 
@@ -290,6 +295,9 @@ class SSClient:
                 for url in packet.payload.urlList:
                     logger.log(logging.INFO, logger.YELLOW + self.formattedAddr + "Skipped : " + url + logger.NOCOLOR)
                     skippedURLlist.append(url)
+                if hasattr(packet.payload, 'session'):
+                    if packet.payload.session is not None:
+                        sessionStorageQueue.put(packet.payload.session)
 
         else:
             logger.log(logging.CRITICAL, "Unrecognized packet type : " + str(packet.type) + ". This packet was dropped")
@@ -333,9 +341,12 @@ class SSClient:
 
     def disconnect(self):
         """Disconnects the client"""
-        logger.log(logging.DEBUG, self.formattedAddr + "Disconnecting")
-        self.isActive = False
-        self.socket.close()
+
+        if self.socket != None:
+            logger.log(logging.INFO, logger.RED + self.formattedAddr + "Disconnecting" + logger.NOCOLOR)
+            self.isActive = False
+            self.socket.close()
+            self.socket = None
 
 
 def ending():
@@ -373,15 +384,9 @@ def main():
 
     #node configration
     if config.crawling == 'dynamic':
-        nodeConfig = protocol.ConfigurationPayload(protocol.ConfigurationPayload.DYNAMIC_CRAWLING)
-        nodeConfig.domainRestricted = config.domainRestricted
-        nodeConfig.requestLimit = config.requestLimit
-        nodeConfig.crawlDelay = config.crawlDelay
-        nodeConfig.rootUrls = config.rootUrls
+        nodeConfig = protocol.ConfigurationPayload(protocol.ConfigurationPayload.DYNAMIC_CRAWLING, config)
     else:
-        nodeConfig = protocol.ConfigurationPayload(protocol.ConfigurationPayload.STATIC_CRAWLING)
-        nodeConfig.crawlDelay = config.crawlDelay
-        nodeConfig.rootUrls = config.rootUrls
+        nodeConfig = protocol.ConfigurationPayload(protocol.ConfigurationPayload.STATIC_CRAWLING, config)
 
     #server
     server = Server(config.host, config.port)

@@ -7,9 +7,11 @@ class Configuration():
         self.host = ""
         self.port = ""
         self.logPath = ""
+        self.userAgent = ""
         self.verbose = False
 
         self.crawling = ""
+        self.robotParserEnabled = False
         self.domainRestricted = False
         self.requestLimit = 0
         self.crawlDelay = 0.0
@@ -37,11 +39,18 @@ def configParser():
     else:
         config.verbose = False
 
+    config.userAgent = configParser.get('common', 'userAgent')
+    config.crawlDelay = configParser.getfloat('common', 'crawlDelay')
+    robotParserEnabled = configParser.get('common', 'robotParser')
+    if robotParserEnabled == "True" or robotParserEnabled == "true":
+        config.robotParserEnabled = True
+    else:
+        config.robotParserEnabled = False
+
     config.crawling = configParser.get('common', 'crawling')
     if config.crawling == 'dynamic':
         domainRestricted = configParser.get('dynamic', 'domainRestricted')
         config.requestLimit = configParser.getint('dynamic', 'requestLimit')
-        config.crawlDelay = configParser.getfloat('dynamic', 'crawlDelay')
         rootUrls = configParser.get('dynamic', 'rootUrls')
         rootUrls = "".join(rootUrls.split())
         config.rootUrls = rootUrls.split(',')
@@ -51,7 +60,6 @@ def configParser():
         else:
             config.domainRestricted = False
     else:
-        config.crawlDelay = configParser.getfloat('static', 'crawlDelay')
         config.rootUrls = readStaticUrl(configParser.get('static', 'rootUrlsPath'))
 
     return config

@@ -18,12 +18,9 @@ class ConfigurationPayload():
     STATIC_CRAWLING = 'STATIC'
     DYNAMIC_CRAWLING = 'DYNAMIC'
 
-    def __init__(self, crawlingType):
+    def __init__(self, crawlingType, config):
         self.crawlingType = crawlingType
-        self.domainRestricted = False
-        self.requestLimit = 0
-        self.crawlDelay = 0
-        self.rootUrls = []
+        self.config = config
 
 
 class InfoPayload():

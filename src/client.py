@@ -30,7 +30,9 @@ class WorkingNode():
         self.infoQueue = Queue.Queue(0)
         self.urlToVisit = Queue.Queue(0)
 
+        self.scrapper = None
         self.data = ""
+
 
     def connect(self, host, port):
         """Sets up the connection to the server (max 3 attemps)"""
@@ -64,7 +66,8 @@ class WorkingNode():
 
                 if deserializedPacket.type == protocol.CONFIG:
                     self.crawlingType = deserializedPacket.payload.crawlingType
-                    self.domainRestricted = deserializedPacket.payload.domainRestricted
+                    self.domainRestricted = deserializedPacket.payload.config.domainRestricted
+                    self.robotParserEnabled = deserializedPacket.payload.config.robotParserEnabled
 
                     payload = protocol.InfoPayload(protocol.InfoPayload.CLIENT_ACK)
                     packet = protocol.Packet(protocol.INFO, payload)
@@ -144,6 +147,8 @@ class WorkingNode():
         """Takes URL from the urlToVisit queue and visits them"""
         logger.log(logging.DEBUG, "CrawlingThread started")
 
+        self.scrapper = scrapping.Scrapper(self.robotParserEnabled)
+
         while self.isActive:
             try:
                 urlList = protocol.deQueue([self.urlToVisit])
@@ -153,7 +158,7 @@ class WorkingNode():
                     continue
 
                 for url in urlList:
-                    session = scrapping.visit(url, self.domainRestricted)
+                    session = self.scrapper.visit(url, self.domainRestricted)
                     logger.log(logging.DEBUG, "Session \n" + str(session.url) +
                       "\nCode : " + str(session.returnCode) +
                       "\nRequest time : " + str(session.requestTime) +

@@ -2,12 +2,15 @@ import urllib2
 import logging
 import logger
 import time
+import robotparser
 import rule
 import socket
 import sys
 import traceback
 import urlparse
 from bs4 import BeautifulSoup
+
+robotDict = {}
 
 class Session:
     def __init__(self, url, failed, code, info, requestTime, bsParsingTime, scrappedURLs, dataContainer=None, errorMsg=None):
@@ -27,61 +30,79 @@ class Session:
         #url error
         self.errorMsg = errorMsg
 
-def visit(url, domainRestricted):
-    """Visits a given URL and return all the data"""
+class Scrapper:
+    def __init__(self, robotParserEnabled):
+        self.robotParserEnabled = robotParserEnabled
 
-    # in the case the rootUrl wasnt formatted the right way
-    if (url.startswith("http://") or url.startswith("https://")) is False:
-        url = "http://" + url
+    def visit(self, url, domainRestricted):
+        """Visits a given URL and return all the data"""
+        logger.log(logging.INFO, "Scrapping : " + str(url))
 
-    logger.log(logging.INFO, "Scrapping : " + str(url))
+        # in the case the rootUrl wasnt formatted the right way
+        if (url.startswith("http://") or url.startswith("https://")) is False:
+            url = "http://" + url
 
-    try:
-        # request
-        start_time = time.time()
         domain = urlparse.urlsplit(url)[1].split(':')[0]
-        request = urllib2.Request(url)
-        request.add_header('User-agent', 'Zeek-Bot-PolytechniqueMTL/1.0a')
-        data = urllib2.urlopen(request,  timeout=4)
-        urlRequestTime = time.time() - start_time
+        httpDomain = "http://" + domain
 
-        # parsing
-        start_time = time.time()
-        bs = BeautifulSoup(data)
-        bsParsingTime = time.time() - start_time
+        try:
+            # robot parser
+            if self.robotParserEnabled:
+                if httpDomain not in robotDict:
+                    parser = robotparser.RobotFileParser()
+                    parser.set_url(urlparse.urljoin(httpDomain, 'robots.txt'))
+                    parser.read()
+                    robotDict[httpDomain] = parser
+                parser = robotDict[httpDomain]
 
-        # url scrapping - dynamic crawling
-        # TODO : Do not scan URL if crawling is static
-        illegal = [".mp4", ".mp3", ".flv", ".m4a", \
-                   ".jpg", ".png", ".gif", \
-                   ".xml", ".pdf", ".gz", ".zip", ".rss"]
+                isParsable = parser.can_fetch('Zeek', url)
+                if not isParsable:
+                    raise Exception("RobotParser")
 
-        links = bs.find_all('a')
-        links = [s.get('href') for s in links]
-        links = [unicode(s) for s in links]
-        if domainRestricted:
-            links = [s for s in links if s.startswith("http://" + domain + "/") or s.startswith("https://" + domain )]
-        for ext in illegal:
-            links = [s for s in links if ext not in s]
-        links = [s for s in links if s.startswith("http:") or s.startswith("https:")]
-        foundUrl = set(links)
+            # request
+            start_time = time.time()
+            request = urllib2.Request(url)
+            request.add_header('User-agent', 'Zeek-Bot-PolytechniqueMTL/1.0a')
+            data = urllib2.urlopen(request,  timeout=4)
+            urlRequestTime = time.time() - start_time
 
-        # data scrapping
-        dataContainer = rule.scrape(url, bs)
-        if dataContainer is None:
-            raise("None data container object")
-        logger.log(logging.DEBUG, "Scrapping complete")
-        return Session(url, False, data.getcode(), data.info(), urlRequestTime, bsParsingTime , foundUrl, dataContainer)
+            # parsing
+            start_time = time.time()
+            bs = BeautifulSoup(data)
+            bsParsingTime = time.time() - start_time
 
-    except urllib2.HTTPError, err:
-        logger.log(logging.INFO, "Scrapping failed - HTTPError " + str(err.msg) + " " + str(err.code))
-        return Session(url, True, err.code, "no data", 0, "", "", errorMsg=err.msg)
-    except socket.timeout:
-        logger.log(logging.INFO, "Scrapping failed - Timeout")
-        return Session(url, True, -1, "no data", 0, "", "", errorMsg="Request timeout")
-    except:
-        logger.log(logging.INFO, "Scrapping failed - Un-handled")
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        message = "\n" + ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
-        logger.log(logging.ERROR, message)
-        return Session(url, True, -2, "no data", 0, "", "", errorMsg=traceback.format_exception(exc_type, exc_value, exc_traceback)[-1])
+            # url scrapping - dynamic crawling
+            # TODO : Do not scan URL if crawling is static
+            illegal = [".mp4", ".mp3", ".flv", ".m4a", \
+                       ".jpg", ".png", ".gif", \
+                       ".xml", ".pdf", ".gz", ".zip", ".rss"]
+
+            links = bs.find_all('a')
+            links = [s.get('href') for s in links]
+            links = [unicode(s) for s in links]
+            if domainRestricted:
+                links = [s for s in links if s.startswith("http://" + domain + "/") or s.startswith("https://" + domain )]
+            for ext in illegal:
+                links = [s for s in links if ext not in s]
+            links = [s for s in links if s.startswith("http:") or s.startswith("https:")]
+            foundUrl = set(links)
+
+            # data scrapping
+            dataContainer = rule.scrape(url, bs)
+            if dataContainer is None:
+                raise("None data container object")
+            logger.log(logging.DEBUG, "Scrapping complete")
+            return Session(url, False, data.getcode(), data.info(), urlRequestTime, bsParsingTime , foundUrl, dataContainer)
+
+        except urllib2.HTTPError, err:
+            logger.log(logging.INFO, "Scrapping failed - HTTPError " + str(err.msg) + " " + str(err.code))
+            return Session(url, True, err.code, "no data", 0, "", "", errorMsg=err.msg)
+        except socket.timeout:
+            logger.log(logging.INFO, "Scrapping failed - Timeout")
+            return Session(url, True, -1, "no data", 0, "", "", errorMsg="Request timeout")
+        except:
+            logger.log(logging.INFO, "Scrapping failed - Un-handled")
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            message = "\n" + ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+            logger.log(logging.ERROR, message)
+            return Session(url, True, -2, "no data", 0, "", "", errorMsg=traceback.format_exception(exc_type, exc_value, exc_traceback)[-1])
