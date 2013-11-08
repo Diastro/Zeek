@@ -13,11 +13,11 @@ verbose = False
 logPath = logs/
 userAgent = Zeek-1.0a
 crawling = static
-robotParser = False
+robotParser = true
 crawlDelay = 0
 
 [dynamic]
-domainRestricted = True
+domainRestricted = false
 requestLimit = 0
 rootUrls = http://www.businessinsider.com
 

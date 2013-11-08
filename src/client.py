@@ -20,29 +20,35 @@ delimiter = '\n\n12345ZEEK6789\n'
 
 class WorkingNode():
     def __init__(self):
+        # socket
         self.host = None
         self.port = None
+        self.data = ""
+
+        # general
+        self.isActive = True
         self.masterNodeFormattedAddr = None
         self.crawlingType = None
 
-        self.isActive = True
+        # data container
         self.outputQueue = Queue.Queue(0)
         self.infoQueue = Queue.Queue(0)
         self.urlToVisit = Queue.Queue(0)
 
+        # object
         self.scrapper = None
-        self.data = ""
+        self.config = None
 
 
     def connect(self, host, port):
-        """Sets up the connection to the server (max 3 attemps)"""
+        """Sets up the connection to the server (max 6 attemps)"""
         self.host = host
         self.port = port
         self.masterNodeFormattedAddr = "[" + str(self.host) + ":" + str(self.port) + "]"
 
         logger.log(logging.DEBUG, "Socket initialization")
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        for connectionAttempt in range(3, 0, -1):
+        for connectionAttempt in range(6, 0, -1):
             if connectionAttempt == 1:
                 logger.log(logging.CRITICAL, "Unable to connect to host " + self.masterNodeFormattedAddr)
                 sys.exit()
@@ -66,8 +72,7 @@ class WorkingNode():
 
                 if deserializedPacket.type == protocol.CONFIG:
                     self.crawlingType = deserializedPacket.payload.crawlingType
-                    self.domainRestricted = deserializedPacket.payload.config.domainRestricted
-                    self.robotParserEnabled = deserializedPacket.payload.config.robotParserEnabled
+                    self.config = deserializedPacket.payload.config
 
                     payload = protocol.InfoPayload(protocol.InfoPayload.CLIENT_ACK)
                     packet = protocol.Packet(protocol.INFO, payload)
@@ -147,7 +152,7 @@ class WorkingNode():
         """Takes URL from the urlToVisit queue and visits them"""
         logger.log(logging.DEBUG, "CrawlingThread started")
 
-        self.scrapper = scrapping.Scrapper(self.robotParserEnabled)
+        self.scrapper = scrapping.Scrapper(self.config.userAgent, self.config.robotParserEnabled, self.config.domainRestricted, self.config.crawling)
 
         while self.isActive:
             try:
@@ -158,7 +163,7 @@ class WorkingNode():
                     continue
 
                 for url in urlList:
-                    session = self.scrapper.visit(url, self.domainRestricted)
+                    session = self.scrapper.visit(url)
                     logger.log(logging.DEBUG, "Session \n" + str(session.url) +
                       "\nCode : " + str(session.returnCode) +
                       "\nRequest time : " + str(session.requestTime) +

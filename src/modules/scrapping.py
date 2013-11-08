@@ -31,10 +31,13 @@ class Session:
         self.errorMsg = errorMsg
 
 class Scrapper:
-    def __init__(self, robotParserEnabled):
+    def __init__(self, userAgent, robotParserEnabled, domainRestricted, crawlingType):
+        self.userAgent = userAgent
         self.robotParserEnabled = robotParserEnabled
+        self.domainRestricted = domainRestricted
+        self.crawlingType = crawlingType
 
-    def visit(self, url, domainRestricted):
+    def visit(self, url):
         """Visits a given URL and return all the data"""
         logger.log(logging.INFO, "Scrapping : " + str(url))
 
@@ -44,6 +47,7 @@ class Scrapper:
 
         domain = urlparse.urlsplit(url)[1].split(':')[0]
         httpDomain = "http://" + domain
+        noWwwDomain = domain.split('www.')[0]
 
         try:
             # robot parser
@@ -55,14 +59,14 @@ class Scrapper:
                     robotDict[httpDomain] = parser
                 parser = robotDict[httpDomain]
 
-                isParsable = parser.can_fetch('Zeek', url)
+                isParsable = parser.can_fetch(self.userAgent, url)
                 if not isParsable:
                     raise Exception("RobotParser")
 
             # request
             start_time = time.time()
             request = urllib2.Request(url)
-            request.add_header('User-agent', 'Zeek-Bot-PolytechniqueMTL/1.0a')
+            request.add_header('User-agent', self.userAgent)
             data = urllib2.urlopen(request,  timeout=4)
             urlRequestTime = time.time() - start_time
 
@@ -72,37 +76,42 @@ class Scrapper:
             bsParsingTime = time.time() - start_time
 
             # url scrapping - dynamic crawling
-            # TODO : Do not scan URL if crawling is static
-            illegal = [".mp4", ".mp3", ".flv", ".m4a", \
-                       ".jpg", ".png", ".gif", \
-                       ".xml", ".pdf", ".gz", ".zip", ".rss"]
+            if self.crawlingType == "dynamic":
+                illegal = [".mp4", ".mp3", ".flv", ".m4a", \
+                           ".jpg", ".png", ".gif", \
+                           ".xml", ".pdf", ".gz", ".zip", ".rss"]
 
-            links = bs.find_all('a')
-            links = [s.get('href') for s in links]
-            links = [unicode(s) for s in links]
-            if domainRestricted:
-                links = [s for s in links if s.startswith("http://" + domain + "/") or s.startswith("https://" + domain )]
-            for ext in illegal:
-                links = [s for s in links if ext not in s]
-            links = [s for s in links if s.startswith("http:") or s.startswith("https:")]
-            foundUrl = set(links)
+                links = bs.find_all('a')
+                links = [s.get('href') for s in links]
+                links = [unicode(s) for s in links]
+                if self.domainRestricted:
+                    links = [s for s in links if s.startswith("http://" + domain + "/") or s.startswith("https://" + domain )]
+                for ext in illegal:
+                    links = [s for s in links if ext not in s]
+                links = [s for s in links if s.startswith("http:") or s.startswith("https:")]
+                foundUrl = set(links)
 
             # data scrapping
             dataContainer = rule.scrape(url, bs)
             if dataContainer is None:
                 raise("None data container object")
+
             logger.log(logging.DEBUG, "Scrapping complete")
             return Session(url, False, data.getcode(), data.info(), urlRequestTime, bsParsingTime , foundUrl, dataContainer)
 
         except urllib2.HTTPError, err:
             logger.log(logging.INFO, "Scrapping failed - HTTPError " + str(err.msg) + " " + str(err.code))
-            return Session(url, True, err.code, "no data", 0, "", "", errorMsg=err.msg)
+            return Session(url, True, err.code, "no data", 0, "", "", errorMsg=err.msg.replace('\n', ""))
         except socket.timeout:
             logger.log(logging.INFO, "Scrapping failed - Timeout")
             return Session(url, True, -1, "no data", 0, "", "", errorMsg="Request timeout")
-        except:
-            logger.log(logging.INFO, "Scrapping failed - Un-handled")
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            message = "\n" + ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
-            logger.log(logging.ERROR, message)
-            return Session(url, True, -2, "no data", 0, "", "", errorMsg=traceback.format_exception(exc_type, exc_value, exc_traceback)[-1])
+        except Exception as e:
+            if e.message == "RobotParser":
+                logger.log(logging.INFO, "Scrapping failed - RobotParser")
+                return Session(url, True, -2, "no data", 0, "", "", errorMsg="Request is not allowed as per Robot.txt")
+            else:
+                logger.log(logging.INFO, "Scrapping failed - Un-handled")
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                message = "\n" + ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+                logger.log(logging.ERROR, message)
+                return Session(url, True, -100, "no data", 0, "", "", errorMsg=traceback.format_exception(exc_type, exc_value, exc_traceback)[-1].replace('\n', ""))

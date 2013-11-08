@@ -10,6 +10,8 @@ RED = '\033[91m'
 YELLOW = '\033[93m'
 NOCOLOR = '\033[0m'
 
+color = [GREEN, PINK, BLUE, RED, YELLOW, NOCOLOR]
+
 def init(path, logName):
     if not os.path.exists(path):
         os.makedirs(path)
@@ -26,7 +28,6 @@ def debugFlag(flag):
 
 def log(level, message):
     #message formatting
-
     if level == logging.DEBUG:
         func = inspect.currentframe().f_back.f_code
         fileName = ''.join(func.co_filename.split('/')[-1])
@@ -41,6 +42,10 @@ def log(level, message):
         print(message)
     elif level is not logging.DEBUG:
         print(message)
+
+    for c in color:
+        message = message.replace(c, "")
+
     logging.log(level, message)
 
 

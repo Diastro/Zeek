@@ -276,7 +276,7 @@ class SSClient:
         elif packet.type == protocol.URL:
 
             if packet.payload.type == protocol.URLPayload.SCRAPPED_URL:
-                logger.log(logging.INFO, self.formattedAddr + "Receiving scrapped URLs : " + str(len(packet.payload.urlList)) + " / " + str(len(scrappedURLlist)) + " - " + str(len(skippedURLlist)))
+                logger.log(logging.INFO, self.formattedAddr + "Receiving scrapped URLs : " + str(len(packet.payload.urlList)).center(5) + " / " + str(len(scrappedURLlist)).center(7) + " - " + str(len(skippedURLlist)).center(5))
                 for url in packet.payload.urlList:
                     urlPool.put(url)
 
@@ -293,12 +293,20 @@ class SSClient:
             if packet.payload.type == protocol.URLPayload.SKIPPED:
                 self.sentCount = self.sentCount-1
                 for url in packet.payload.urlList:
-                    logger.log(logging.INFO, logger.YELLOW + self.formattedAddr + "Skipped : " + url + logger.NOCOLOR)
                     skippedURLlist.append(url)
                 if hasattr(packet.payload, 'session'):
                     if packet.payload.session is not None:
                         sessionStorageQueue.put(packet.payload.session)
-
+                        if packet.payload.session.returnCode == -1:
+                            logger.log(logging.INFO, logger.PINK + self.formattedAddr + "Skipped (timeout) : " + url + logger.NOCOLOR)
+                        elif packet.payload.session.returnCode == -2:
+                            logger.log(logging.INFO, logger.PINK + self.formattedAddr + "Skipped (request not allowed - robot parser) : " + url + logger.NOCOLOR)
+                        elif packet.payload.session.returnCode == -100:
+                            logger.log(logging.INFO, logger.YELLOW + self.formattedAddr + "Skipped (unknown error) : " + url + logger.NOCOLOR)
+                        else:
+                            logger.log(logging.INFO, logger.BLUE + self.formattedAddr + "Skipped (html error " + str(packet.payload.session.returnCode) + ") : " + url + logger.NOCOLOR)
+                else:
+                    logger.log(logging.INFO, logger.RED + self.formattedAddr + "No session returned" + url + logger.NOCOLOR)
         else:
             logger.log(logging.CRITICAL, "Unrecognized packet type : " + str(packet.type) + ". This packet was dropped")
             return
