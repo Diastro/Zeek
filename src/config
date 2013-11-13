@@ -12,7 +12,7 @@ hostPort = 5050
 verbose = False
 logPath = logs/
 userAgent = Zeek-1.0a
-crawling = static
+crawling = dynamic
 robotParser = true
 crawlDelay = 0
 
