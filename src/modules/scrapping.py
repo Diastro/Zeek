@@ -36,7 +36,8 @@ class Scrapper:
         self.robotParserEnabled = robotParserEnabled
         self.domainRestricted = domainRestricted
         self.crawlingType = crawlingType
-        
+
+        # eventually move this to client.py
         reload(rule)
 
     def visit(self, url):
@@ -49,7 +50,6 @@ class Scrapper:
 
         domain = urlparse.urlsplit(url)[1].split(':')[0]
         httpDomain = "http://" + domain
-        noWwwDomain = domain.split('www.')[0]
 
         try:
             # robot parser

@@ -2,20 +2,20 @@ import logging
 import logger
 import atexit
 
-data = None
-error = None
+dataFd = None
+errorFd = None
 
 def writeToFile(session, container):
-    global data, error
+    global dataFd, errorFd
     try:
         if (not session.failed) and (session.dataContainer.title is not None):
-            if data is None:
-                data = open('output.txt', 'w')
-            data.write(container.title.replace(",","") + "," + container.date.replace(",","").replace(".","") + "," + session.url +"\n")
+            if dataFd is None:
+                dataFd = open('output.txt', 'w')
+            dataFd.write(container.title.replace(",","") + "," + container.date.replace(",","").replace(".","") + "," + session.url +"\n")
         elif session.failed:
-            if error is None:
-                error = open('error.txt', 'w')
-            error.write(str(session.returnCode).replace(",","") + "," + str(session.errorMsg).replace(",","") + "." + session.url.replace(",","") + "\n")
+            if errorFd is None:
+                errorFd = open('error.txt', 'w')
+            errorFd.write(str(session.returnCode).replace(",","") + "," + str(session.errorMsg).replace(",","") + "." + session.url.replace(",","") + "\n")
         #else:
         #    raise Exception("..")
     except:
@@ -26,9 +26,9 @@ def writeToDb(session, container):
 
 def atexitfct():
     """Cleanly closes file objects"""
-    if data is not None:
-        data.close()
-    if error is not None:
-        error.close()
+    if dataFd is not None:
+        dataFd.close()
+    if errorFd is not None:
+        errorFd.close()
 
 atexit.register(atexitfct)
