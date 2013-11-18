@@ -2,6 +2,7 @@ import ConfigParser
 import datetime
 import Queue
 import logging
+import os
 import pickle
 import socket
 import sys
@@ -74,6 +75,53 @@ class WorkingNode():
                     self.crawlingType = deserializedPacket.payload.crawlingType
                     self.config = deserializedPacket.payload.config
 
+                    # dynamic module reload
+                    basePath = os.path.dirname(sys.argv[0])
+                    if basePath:
+                        basePath = basePath + "/"
+
+                    # path building
+                    rulePath = basePath + "modules/rule.py"
+                    scrappingPath = basePath + "modules/scrapping.py"
+
+                    # re-writing source .py
+                    logger.log(logging.INFO, "Importing rule.py from server")
+                    ruleFd = open(rulePath, 'w')
+                    ruleFd.write(self.config.rule_py)
+                    ruleFd.close()
+
+                    logger.log(logging.INFO, "Importing scrapping.py from server")
+                    scrappingFd = open(scrappingPath, 'w')
+                    scrappingFd.write(self.config.scrapping_py)
+                    scrappingFd.close()
+
+                    # compilation test
+                    try:
+                        code=open(rulePath, 'rU').read()
+                        compile(code, "rule_test", "exec")
+                    except:
+                        exc_type, exc_value, exc_traceback = sys.exc_info()
+                        message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+                        logger.log(logging.CRITICAL, message)
+                        logger.log(logging.ERROR, "Unable to compile rule.py (is the syntax right?)")
+                        sys.exit(0)
+
+                    try:
+                        code=open(scrappingPath, 'rb').read(os.path.getsize(scrappingPath))
+                        compile(code, "scrapping_test", "exec")
+                    except:
+                        exc_type, exc_value, exc_traceback = sys.exc_info()
+                        message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+                        logger.log(logging.CRITICAL, message)
+                        logger.log(logging.ERROR, "Unable to compile scrapping.py (is the syntax right?)")
+                        sys.exit(0)
+
+                    # dynamic reload of modules
+                    # TODO reloading of rule.py should eventually come here
+                    logger.log(logging.INFO, "Reloading modules imported for server")
+                    reload(sys.modules["modules.scrapping"])
+
+
                     payload = protocol.InfoPayload(protocol.InfoPayload.CLIENT_ACK)
                     packet = protocol.Packet(protocol.INFO, payload)
                     self.writeSocket(packet)
@@ -89,7 +137,7 @@ class WorkingNode():
 
     def run(self):
         """Lunches main threads"""
-        logger.log(logging.INFO, "Starting Crawling/Scrapping sequence...")
+        logger.log(logging.INFO, "\n\nStarting Crawling/Scrapping sequence...")
         if self.isActive:
             thread.start_new_thread(self.outputThread, ())
             thread.start_new_thread(self.inputThread, ())
@@ -255,9 +303,13 @@ class WorkingNode():
 
 
 def main():
+    path = os.path.dirname(sys.argv[0])
+    if path:
+        path = path + "/"
+
     #config
     config = ConfigParser.RawConfigParser(allow_no_value=True)
-    config.read('config')
+    config.read(path + 'config')
     host = config.get('client', 'hostAddr')
     port = config.getint('client', 'hostPort')
     logPath = config.get('common', 'logPath')

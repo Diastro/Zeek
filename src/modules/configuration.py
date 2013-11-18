@@ -1,5 +1,7 @@
 import ConfigParser
-import datetime
+import inspect
+import os
+import sys
 
 
 class Configuration():
@@ -17,6 +19,9 @@ class Configuration():
         self.crawlDelay = 0.0
         self.rootUrls = []
 
+        self.rule_py = ""
+        self.scrapping_py = ""
+
 def readStaticUrl(path):
     urls = []
     file = open(path, 'r')
@@ -25,11 +30,22 @@ def readStaticUrl(path):
         urls.append(url)
     return urls
 
+def readFile(path):
+    content = ""
+    file = open(path, 'r')
+    for line in file:
+        content = content + line
+    return content
+
 def configParser():
+    path = os.path.dirname(sys.argv[0])
+    if path:
+        path = path + "/"
+
     config = Configuration()
     configParser = ConfigParser.RawConfigParser(allow_no_value=True)
 
-    configParser.read('config')
+    configParser.read(path + 'config')
     config.host = configParser.get('server', 'listeningAddr')
     config.port = configParser.getint('server', 'listeningPort')
     config.logPath = configParser.get('common', 'logPath')
@@ -61,5 +77,9 @@ def configParser():
             config.domainRestricted = False
     else:
         config.rootUrls = readStaticUrl(configParser.get('static', 'rootUrlsPath'))
+
+    # dynamic module reload
+    config.rule_py = readFile(path + "modules/rule.py")
+    config.scrapping_py = readFile(path + "modules/scrapping.py")
 
     return config

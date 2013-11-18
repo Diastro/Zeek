@@ -94,8 +94,8 @@ class Server:
             self.run()
             serverRunning = True
 
-        for clients in self.clientDict:
-            logger.log(logging.DEBUG, "Working node connected : " + str(self.clientDict[clients].id))
+        #for clients in self.clientDict:
+        #    logger.log(logging.DEBUG, "Working node connected : " + str(self.clientDict[clients].id))
 
         try:
             client.sendConfig(self.configurationPayload)

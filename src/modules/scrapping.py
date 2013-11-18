@@ -36,6 +36,8 @@ class Scrapper:
         self.robotParserEnabled = robotParserEnabled
         self.domainRestricted = domainRestricted
         self.crawlingType = crawlingType
+        
+        reload(rule)
 
     def visit(self, url):
         """Visits a given URL and return all the data"""
