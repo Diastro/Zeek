@@ -1,5 +1,5 @@
 #!/bin/bash
-# spawn.sh
+# launch-clients.sh
 
 COUNT=-1
 
