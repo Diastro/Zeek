@@ -1,6 +1,7 @@
 import inspect
 import logging
 import os
+import sys
 
 debugFlag = True
 GREEN = '\033[92m'
@@ -13,6 +14,10 @@ NOCOLOR = '\033[0m'
 color = [GREEN, PINK, BLUE, RED, YELLOW, NOCOLOR]
 
 def init(path, logName):
+    basePath = os.path.dirname(sys.argv[0])
+    if basePath:
+        basePath = basePath + "/"
+    path = basePath + path
     if not os.path.exists(path):
         os.makedirs(path)
     logging.basicConfig(filename=path+logName, format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG)
