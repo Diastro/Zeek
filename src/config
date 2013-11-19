@@ -17,9 +17,9 @@ robotParser = true
 crawlDelay = 0
 
 [dynamic]
-domainRestricted = false
+domainRestricted = true
 requestLimit = 0
-rootUrls = http://www.businessinsider.com
+rootUrls = http://www.nytimes.com/
 
 [static]
 rootUrlsPath = url.txt

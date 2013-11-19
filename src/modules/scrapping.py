@@ -1,3 +1,4 @@
+import cookielib
 import urllib2
 import logging
 import logger
@@ -67,9 +68,11 @@ class Scrapper:
 
             # request
             start_time = time.time()
+            cj = cookielib.CookieJar()
+            opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
             request = urllib2.Request(url)
             request.add_header('User-agent', self.userAgent)
-            data = urllib2.urlopen(request,  timeout=4)
+            data = opener.open(request, timeout=4)
             urlRequestTime = time.time() - start_time
 
             # parsing

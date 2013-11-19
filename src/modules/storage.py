@@ -11,7 +11,7 @@ def writeToFile(session, container):
         if (not session.failed) and (session.dataContainer.title is not None):
             if dataFd is None:
                 dataFd = open('output.txt', 'w')
-            dataFd.write(container.title.replace(",","") + "," + container.date.replace(",","").replace(".","") + "," + session.url +"\n")
+            dataFd.write(container.title.replace(",","") + "," + session.url +"\n")
         elif session.failed:
             if errorFd is None:
                 errorFd = open('error.txt', 'w')

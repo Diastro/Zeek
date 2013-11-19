@@ -14,18 +14,13 @@ def scrape(url, bs):
     domain = urlparse.urlsplit(url)[1].split(':')[0]
 
     # extracting data from businessInsider
-    if domain == "www.businessinsider.com":
-        stories = bs.find("div", {"class": "sl-layout-post"})
-        if stories is not None:
-            title = stories.find("h1")
+    if domain == "www.nytimes.com":
+        headline = bs.find("h1", {"itemprop": "headline"})
+        if headline is not None:
+            title = headline.find("nyt_headline")
             if title is not None:
                 container.title = title.get_text().encode('ascii', 'ignore')
 
-        stories = bs.find("div", {"class": "sl-layout-post"})
-        if stories is not None:
-            date = stories.find("span", {"class": "date format-date"})
-            if date is not None:
-                container.date = date.get_text().encode('ascii', 'ignore')
         return container
 
     return Container()
