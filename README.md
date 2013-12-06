@@ -47,11 +47,22 @@ $ pyhton client.py
 - [BeautifulSoup4](http://www.crummy.com/software/BeautifulSoup/)
 - [lxml](http://lxml.de/)
 
+## How it works
+***Coming soon***
+
+### Rule.py Storage.py
+***Coming soon***
+
+### Testing your rule.py
+***Coming soon***
+
 ## Recommended topologies
 Zeek can be lunch in 2 different topologies depending on which resource is limiting you. When you want to crawl a large quantity of web pages, you need a large bandwith (when executing multiple parallel requests) and you need computing power (CPU). Depending on which of these 2 is limiting you, you should use the appropriate topology for the fastes crawl time.
 Keep in mind that if time isn't a constrain for you, a 1-1 approach is always the safest and less expensive!
- * Basic topology (recommended) : see the 1-1 topology
- * Best performance topology : see the 1-n topology
+ * Basic topology (recommended) : see the **1-1 topology**
+ * Best performance topology : see the **1-n topology**
+
+No matter which topology you are using, you can always use the `launch-clients.sh` to launch multiple instance of client.py on a same computer.
 
 ### 1-1 Topology
 The 1-1 Topology is probably the easyest to achieve. It only requires 1 computer so it makes it easy for anyone to deploy Zeek this way. Using this type of topology you first deploy the server.py (using 127.0.0.1 as the listeningAddr) and connect as many client.py process to it (using 127.0.0.1 as the hostAddr) and everything runs on the same machine. Be aware that depending on the specs of you computer, you will end up being limited by the number of thread launch by the serve.py process at some point. server.py launches 3 threads per client that connects to it so if your computer allows you to create 300 thread per process, the maximum number of client.py that you will be able to launch will be approximately 100. If you end up lunching that many client, you might end up being limited by your bandwith at some point.<br>
@@ -62,7 +73,7 @@ This topology is perfect if you want to achieve best performance but requires th
 [1-n Topology schema](http://i.imgur.com/lXCEAk6.jpg)
 
 ## Stats - Benchmark
-*** Coming soon ***
+***Coming soon***
 
 ## Warning
 Using a distributed crawler/scrapper can make you life easier but also comes with great responsabilities. When you are using a crawler to make request to a website, you generate connections to this website and if the targeted web site isn't configured properly, it can have desastrous consequences. You're probalby asking yourself "What exactly does he mean". What I mean is that by using 10 computers each having 30 client.py instances running you could (in a perfect world) generate 300 parallels requests. If these 300 parallel request are targetting the same website/domain, you will be downloading a lot a data pretty quickly and if the targeted domain isn't prepared for it, you could protentially shut it down.<br>
