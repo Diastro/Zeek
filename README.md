@@ -43,6 +43,9 @@ $ pyhton server.py
 $ pyhton client.py
 ~~~
 
+## Configuration fields
+***Coming soon***
+
 ####Third party library
 - [BeautifulSoup4](http://www.crummy.com/software/BeautifulSoup/)
 - [lxml](http://lxml.de/)
