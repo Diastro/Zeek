@@ -18,8 +18,9 @@ I'm planning to continue working on it and probably release an updated version i
 *David Albertson*
 
 ##Execution
-1) Download/Install the required third party library
+1) Download the source and install the required third party library
 ~~~ sh
+$ git clone https://github.com/Diastro/Zeek.git
 $ easy_install beautifulsoup4
 $ easy_install lxml
 ~~~
@@ -43,12 +44,34 @@ $ pyhton server.py
 $ pyhton client.py
 ~~~
 
-## Configuration fields
-***Coming soon***
-
 ####Third party library
 - [BeautifulSoup4](http://www.crummy.com/software/BeautifulSoup/)
 - [lxml](http://lxml.de/)
+
+## Configuration fields
+**[server]**<br>
+*listeningAddr* : Adress on which the server listens for incoming connections from clients (ex : 127.0.0.1)<br>
+*listeningPort* : Port on which the server listens for incoming connections from clients (ex : 5050)<br>
+
+**[client]**<br>
+*hostAddr* : Adress to connect to, on which the server listens for incoming connections (ex : 127.0.0.1)<br>
+*hostPort* : Port to connect to, on which the server listens for incoming connections (ex : 5050)<br>
+
+**[common]**<br>
+*verbode* : Enables or disables verbose output in the console (ex: True, False)<br>
+*logPath* : Path where to save the ouput logfile of each process (ex : logs/)<br>
+*userAgent* : Usually the name of your crawler or bot (ex : MyBot 1.0)<br>
+*crawling* : Type of crawling (ex : dynamic, static)<br>
+*robotParser* : Considers or not the robot.txt rule while visiting a domain (ex : True, False)<br>
+*crawlDelay* : Delay, in seconds, between the 2 subsequent request (ex : 0, 3, 5)<br>
+
+**[dynamic]** (Applies only if the crawling type is set to dynamic)<br>
+*domainRestricted* : If set to true, the crawler will only visit url that are same as the root url (ex : True, False)<br>
+*requestLimit* : Stops the crawler after the limit is reach (after visiting x pages) (ex : 0, 2, 100, ...)<br>
+*rootUrls* : Url to start from (ex : www.businessinsider.com)<br>
+
+**[static]** (Applies only if the crawling type is set to static)<br>
+*rootUrlsPath* : Path to the file which contains a list of url to visit (ex : url.txt)<br>
 
 ## How it works
 ***Coming soon***
