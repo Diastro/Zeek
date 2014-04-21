@@ -3,7 +3,7 @@ Zeek
 
 Python distributed web crawling / web scraper
 
-This the first version of my distributed web crawler. It isn't perfect yet but I'm sharing it because it because the end result is far better then what I expected and it can easily be adapted to your needs. Feel free to improve/fork/report issues.
+This the first version of my distributed web crawler. It isn't perfect yet but I'm sharing it because the end result is far better then what I expected and it can easily be adapted to your needs. Feel free to improve/fork/report issues.
 
 I'm planning to continue working on it and probably release an updated version in the future but i'm not sure when yet.
 
