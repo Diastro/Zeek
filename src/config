@@ -1,11 +1,9 @@
 [server]
-#listeningAddr = 127.0.0.1
-listeningAddr = 132.207.114.185
+listeningAddr = 127.0.0.1
 listeningPort = 5050
 
 [client]
 hostAddr = 127.0.0.1
-#hostAddr = kepler.step.polymtl.ca
 hostPort = 5050
 
 [common]
@@ -19,7 +17,7 @@ crawlDelay = 0
 [dynamic]
 domainRestricted = true
 requestLimit = 0
-rootUrls = http://www.nytimes.com/
+rootUrls = http://www.businessinsider.com/
 
 [static]
 rootUrlsPath = url.txt
