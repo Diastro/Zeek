@@ -9,11 +9,11 @@ I'm planning to continue working on it and probably release an updated version i
 
 ### Use cases
  * Visit a **predetermined** list of URLs and scrape specific data on these pages
- * Visit or **dynamicly visit** web pages on a periodic bases and **scrape** data on these pages
- * Dynamicly visit pages on a **given domain** and scrape data on these pages
- * Dynamicly visit pages **all over the internet** and scrape data on these pages
+ * Visit or **dynamically visit** web pages on a periodic bases and **scrape** data on these pages
+ * Dynamically visit pages on a **given domain** and scrape data on these pages
+ * Dynamically visit pages **all over the internet** and scrape data on these pages
  
-<small>All the scrapped data can be stored in an output file (ie: `.csv`, `.txt`) or in a database</small>
+<small>All the scraped data can be stored in an output file (ie: `.csv`, `.txt`) or in a database</small>
 
 *David Albertson*
 
@@ -35,13 +35,13 @@ $ easy_install lxml
 4) Launch the server on the **master** node
 
 ~~~ sh
-$ pyhton server.py
+$ python server.py
 ~~~
 
 5) Launch the client on the **working** nodes
 
 ~~~ sh
-$ pyhton client.py
+$ python client.py
 ~~~
 
 ####Third party library
@@ -50,19 +50,19 @@ $ pyhton client.py
 
 ## Configuration fields
 **[server]**<br>
-*listeningAddr* : Adress on which the server listens for incoming connections from clients (ex : 127.0.0.1)<br>
+*listeningAddr* : Address on which the server listens for incoming connections from clients (ex : 127.0.0.1)<br>
 *listeningPort* : Port on which the server listens for incoming connections from clients (ex : 5050)<br>
 
 **[client]**<br>
-*hostAddr* : Adress to connect to, on which the server listens for incoming connections (ex : 127.0.0.1)<br>
+*hostAddr* : Address to connect to, on which the server listens for incoming connections (ex : 127.0.0.1)<br>
 *hostPort* : Port to connect to, on which the server listens for incoming connections (ex : 5050)<br>
 
 **[common]**<br>
-*verbode* : Enables or disables verbose output in the console (ex: True, False)<br>
+*verbose* : Enables or disables verbose output in the console (ex: True, False)<br>
 *logPath* : Path where to save the ouput logfile of each process (ex : logs/)<br>
 *userAgent* : Usually the name of your crawler or bot (ex : MyBot 1.0)<br>
 *crawling* : Type of crawling (ex : dynamic, static)<br>
-*robotParser* : Considers or not the robot.txt rule while visiting a domain (ex : True, False)<br>
+*robotParser* : Obey or ignore the robots.txt rule while visiting a domain (ex : True, False)<br>
 *crawlDelay* : Delay, in seconds, between the 2 subsequent request (ex : 0, 3, 5)<br>
 
 **[dynamic]** (Applies only if the crawling type is set to dynamic)<br>
@@ -83,30 +83,30 @@ $ pyhton client.py
 ***Coming soon***
 
 ## Recommended topologies
-Zeek can be lunch in 2 different topologies depending on which resource is limiting you. When you want to crawl a large quantity of web pages, you need a large bandwith (when executing multiple parallel requests) and you need computing power (CPU). Depending on which of these 2 is limiting you, you should use the appropriate topology for the fastes crawl time.
-Keep in mind that if time isn't a constrain for you, a 1-1 approach is always the safest and less expensive!
+Zeek can be launched in 2 different topologies depending on which resource is limiting you. When you want to crawl a large quantity of web pages, you need a large bandwidth (when executing multiple parallel requests) and you need computing power (CPU). Depending on which of these 2 is limiting you, you should use the appropriate topology for the fastest crawl time.
+Keep in mind that if time isn't a constraint for you, a 1-1 approach is always the safest and less expensive!
  * Basic topology (recommended) : see the **1-1 topology**
  * Best performance topology : see the **1-n topology**
 
 No matter which topology you are using, you can always use the `launch-clients.sh` to launch multiple instance of client.py on a same computer.
 
 ### 1-1 Topology
-The 1-1 Topology is probably the easyest to achieve. It only requires 1 computer so it makes it easy for anyone to deploy Zeek this way. Using this type of topology you first deploy the server.py (using 127.0.0.1 as the listeningAddr) and connect as many client.py process to it (using 127.0.0.1 as the hostAddr) and everything runs on the same machine. Be aware that depending on the specs of you computer, you will end up being limited by the number of thread launch by the serve.py process at some point. server.py launches 3 threads per client that connects to it so if your computer allows you to create 300 thread per process, the maximum number of client.py that you will be able to launch will be approximately 100. If you end up lunching that many client, you might end up being limited by your bandwith at some point.<br>
+The 1-1 Topology is probably the easiest to achieve. It only requires 1 computer so it makes it easy for anyone to deploy Zeek this way. Using this type of topology you first deploy the server.py (using 127.0.0.1 as the listeningAddr) and connect as many client.py processes to it (using 127.0.0.1 as the hostAddr) and everything runs on the same machine. Be aware that depending on the specs of you computer, you will end up being limited by the number of threads launched by the serve.py process at some point. server.py launches 3 threads per client that connects to it so if your computer allows you to create 300 thread per process, the maximum number of client.py that you will be able to launch will be approximately 100. If you end up launching that many client, you might end up being limited by your bandwidth at some point.<br>
 [1-1 Topology schema](http://i.imgur.com/7NJGodN.jpg)
 
 ### 1-n Topology
-This topology is perfect if you want to achieve best performance but requires that you have more than 1 computer at your disposal. The only limitation you have using this topology is regarding the number of clients that can connect to the server.py process. As explained above, server.py launches 3 threads per client that connects to it so if your computer allows you to create 300 thread per process, the maximum number of client.py that you will be able to launch will be approximately 100. Though in this case, if each computer uses a seperate connection, bandwith shouldn't be a problem.<br>
+This topology is perfect if you want to achieve best performance but requires that you have more than 1 computer at your disposal. The only limitation you have using this topology is regarding the number of clients that can connect to the server.py process. As explained above, server.py launches 3 threads per client that connects to it so if your computer allows you to create 300 thread per process, the maximum number of client.py that you will be able to launch will be approximately 100. Though in this case, if each computer uses a seperate connection, bandwidth shouldn't be a problem.<br>
 [1-n Topology schema](http://i.imgur.com/lXCEAk6.jpg)
 
 ## Stats - Benchmark
 ***Coming soon***
 
 ## Warning
-Using a distributed crawler/scrapper can make your life easier but also comes with great responsabilities. When you are using a crawler to make request to a website, you generate connections to this website and if the targeted web site isn't configured properly, it can have desastrous consequences. You're probalby asking yourself "What exactly does he mean". What I mean is that by using 10 computers each having 30 client.py instances running you could (in a perfect world) generate 300 parallels requests. If these 300 parallel request are targetting the same website/domain, you will be downloading a lot a data pretty quickly and if the targeted domain isn't prepared for it, you could protentially shut it down.<br>
-During the development of Zeek I happened to experience something similar while doing approximatly 250 parallel request to a pretty well known website. The sysadmins of this website ended up contacting the sysadmin where I have my own server hosted being worried that something strange was happenning (they were probably thinking of an attack). During this period of time I ended up downloading 7Gb of data in about 30 minutes. This alone trigged some internal alert on their side. That being now said, I'm not responsible of the usage you will be doing of Zeek. Simply try to be careful and respectful of others online!
+Using a distributed crawler/scraper can make your life easier but also comes with great responsibilities. When you are using a crawler to make request to a website, you generate connections to this website and if the targeted web site isn't configured properly, it can have disastrous consequences. You're probably asking yourself "What exactly does he mean?". What I mean is that by using 10 computers each having 30 client.py instances running you could (in a perfect world) generate 300 parallels requests. If these 300 parallel request are targetting the same website/domain, you will be downloading a lot a data pretty quickly and if the targeted domain isn't prepared for it, you could potentially shut it down.<br>
+During the development of Zeek I happened to experience something similar while doing approximatly 250 parallel request to a pretty well known website. The sysadmins of this website ended up contacting the sysadmin where I have my own server hosted being worried that something strange was happenning (they were probably thinking of an attack). During this period of time I ended up downloading 7Gb of data in about 30 minutes. This alone trigged some internal alert on their side. That being now said, I'm not responsible for your usage of Zeek. Simply try to be careful and respectful of others online!
 
 ##References
 - [Wikipedia - WebCrawler](http://en.wikipedia.org/wiki/Web_crawler)
 - [Wikipedia - Distributed crawling](http://en.wikipedia.org/wiki/Distributed_web_crawling)
 - [How to Parse data using BeautifulSoup4](http://www.crummy.com/software/BeautifulSoup/bs3/documentation.html)
-- [Understanding Robot.txt](http://www.robotstxt.org/faq.html)
+- [Understanding Robots.txt](http://www.robotstxt.org/faq.html)
