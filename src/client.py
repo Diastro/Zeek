@@ -136,7 +136,7 @@ class WorkingNode():
                 self.isActive = False
 
     def run(self):
-        """Lunches main threads"""
+        """Launches main threads"""
         logger.log(logging.INFO, "\n\nStarting Crawling/Scrapping sequence...")
         if self.isActive:
             thread.start_new_thread(self.outputThread, ())
