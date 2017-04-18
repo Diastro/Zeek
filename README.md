@@ -17,7 +17,7 @@ I'm planning to continue working on it and probably release an updated version i
 
 *David Albertson*
 
-##Execution
+## Execution
 1) Download the source and install the required third party library
 ~~~ sh
 $ git clone https://github.com/Diastro/Zeek.git
@@ -44,7 +44,7 @@ $ python server.py
 $ python client.py
 ~~~
 
-####Third party library
+#### Third party library
 - [BeautifulSoup4](http://www.crummy.com/software/BeautifulSoup/)
 - [lxml](http://lxml.de/)
 
@@ -105,7 +105,7 @@ This topology is perfect if you want to achieve best performance but requires th
 Using a distributed crawler/scraper can make your life easier but also comes with great responsibilities. When you are using a crawler to make request to a website, you generate connections to this website and if the targeted web site isn't configured properly, it can have disastrous consequences. You're probably asking yourself "What exactly does he mean?". What I mean is that by using 10 computers each having 30 client.py instances running you could (in a perfect world) generate 300 parallels requests. If these 300 parallel request are targetting the same website/domain, you will be downloading a lot a data pretty quickly and if the targeted domain isn't prepared for it, you could potentially shut it down.<br>
 During the development of Zeek I happened to experience something similar while doing approximatly 250 parallel request to a pretty well known website. The sysadmins of this website ended up contacting the sysadmin where I have my own server hosted being worried that something strange was happenning (they were probably thinking of an attack). During this period of time I ended up downloading 7Gb of data in about 30 minutes. This alone trigged some internal alert on their side. That being now said, I'm not responsible for your usage of Zeek. Simply try to be careful and respectful of others online!
 
-##References
+## References
 - [Wikipedia - WebCrawler](http://en.wikipedia.org/wiki/Web_crawler)
 - [Wikipedia - Distributed crawling](http://en.wikipedia.org/wiki/Distributed_web_crawling)
 - [How to Parse data using BeautifulSoup4](http://www.crummy.com/software/BeautifulSoup/bs3/documentation.html)
